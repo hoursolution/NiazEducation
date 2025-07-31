@@ -100,13 +100,18 @@ const router = createBrowserRouter([
   {
     path: "/",
     // element: <StudentRegistrationForm />,
-    element: <LandingPage />, // Render the StudentRegistrationForm component
+    // element: <LandingPage />, // Render the StudentRegistrationForm component
+    element: <LoginForm />, // Render the StudentRegistrationForm component
   },
+  { path: "login", element: <LoginForm /> },
+  { path: "registration", element: <StudentRegistrationForm /> },
   {
     path: "/password-reset-request",
     element: <PasswordResetRequest />,
   },
   { path: "/reset-password/:resetToken", element: <PasswordReset /> },
+
+  // student portal
   {
     path: "/student",
     element: <ProtectedRoute element={<StudentPortal />} />,
@@ -134,6 +139,8 @@ const router = createBrowserRouter([
       // { path: "addStudent", element: <AddStudentForm /> },
     ],
   },
+
+  // donor
   {
     path: "/donor",
     element: <ProtectedRoute element={<Donor_portal />} />,
@@ -150,8 +157,8 @@ const router = createBrowserRouter([
       { path: "bankDetails/:studentId", element: <BankDetailsOfStudent /> },
     ],
   },
-  { path: "login", element: <LoginForm /> },
-  { path: "registration", element: <StudentRegistrationForm /> },
+
+  // admin
   {
     path: "/Admin",
     element: <ProtectedRoute element={<Admin_portal />} />,
