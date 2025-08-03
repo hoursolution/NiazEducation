@@ -15,11 +15,16 @@ import {
   Fade,
   Slide,
   Zoom,
+  Dialog,
+  DialogTitle,
+  DialogActions,
+  DialogContent,
 } from "@mui/material";
 import { useNavigate, useParams } from "react-router-dom";
 import Snackbar from "@mui/material/Snackbar";
 import MuiAlert from "@mui/material/Alert";
 import CircularProgress from "@mui/material/CircularProgress";
+import CloseIcon from "@mui/icons-material/Close";
 import { styled, keyframes } from "@mui/system";
 
 // Define custom animations
@@ -224,7 +229,7 @@ const EditApplicationForm = () => {
     b_form_doc: "",
     disabled_parent_photo: "",
     child_photo: "",
-    school_record: "",
+    // school_record: "",
     proof_of_address: "",
   };
 
@@ -428,7 +433,7 @@ const EditApplicationForm = () => {
         return "";
       case "disabled_parent_photo":
       case "child_photo":
-      case "school_record":
+      // case "school_record":
       case "proof_of_address":
         if (!value) {
           return "Please upload a file";
@@ -552,38 +557,61 @@ const EditApplicationForm = () => {
     }));
   };
 
-  const handleRemoveFile = (field, index = null) => {
-    if (index !== null) {
-      setFormData((prevData) => ({
-        ...prevData,
-        [field]: prevData[field].filter((_, i) => i !== index),
-      }));
-    } else {
-      setFormData((prevData) => ({
-        ...prevData,
-        [field]: null,
-      }));
+  const [deletedDocumentIds, setDeletedDocumentIds] = useState([]);
+
+  const handleRemoveFile = (field, index) => {
+    const updatedFiles = [...formData[field]];
+
+    const fileToRemove = updatedFiles[index];
+    if (fileToRemove && fileToRemove.id) {
+      setDeletedDocumentIds((prev) => [...prev, fileToRemove.id]);
     }
-    setFormErrors((prevErrors) => ({
-      ...prevErrors,
-      [field]: validateField(field, index !== null ? formData[field] : null),
+
+    updatedFiles.splice(index, 1);
+    setFormData((prev) => ({
+      ...prev,
+      [field]: updatedFiles,
     }));
   };
 
+  const [open, setOpen] = useState(false);
+  const [imageUrl, setImageUrl] = useState("");
+  const [error, setError] = useState(false);
+
   const handleViewFileDetails = (file) => {
-    console.log(file);
     let url = "";
 
-    if (file instanceof File) {
-      // Local uploaded file
-      url = URL.createObjectURL(file?.file);
+    if (Array.isArray(file)) {
+      file = file[0];
     }
 
-    if (url) {
-      window.open(url, "_blank");
-    } else {
-      console.error("Invalid file format", file);
+    if (file instanceof File || file?.file instanceof File) {
+      url = URL.createObjectURL(file?.file || file);
+    } else if (typeof file === "object" && typeof file.file === "string") {
+      url = file.file;
     }
+
+    if (!url) {
+      alert("⚠️ No valid file URL provided.");
+      return;
+    }
+
+    // Open PDFs or other files directly in a new tab
+    if (url.endsWith(".pdf") || !url.match(/\.(jpeg|jpg|png|gif)$/i)) {
+      window.open(url, "_blank");
+      return;
+    }
+
+    // For images: show in modal
+    setImageUrl(url);
+    setError(false);
+    setOpen(true);
+  };
+
+  const handleClose = () => {
+    setOpen(false);
+    setImageUrl("");
+    setError(false);
   };
 
   const handleSubmit = async (e) => {
@@ -643,10 +671,20 @@ const EditApplicationForm = () => {
       "school_record",
       "proof_of_address",
     ].forEach((field) => {
-      if (formData[field]) {
-        formDataObject.append(field, formData[field]);
+      const files = formData[field];
+
+      if (files) {
+        const fileArray = Array.isArray(files) ? files : [files];
+        fileArray.forEach((file) => {
+          formDataObject.append(field, file);
+        });
       }
     });
+
+    // ✅ Append deleted document IDs here
+    if (deletedDocumentIds.length > 0) {
+      formDataObject.append("deletedDocumentIds", deletedDocumentIds.join(","));
+    }
 
     try {
       const response = await fetch(
@@ -1567,9 +1605,7 @@ const EditApplicationForm = () => {
                           )}
                         </Grid>
                         <Grid item xs={12} sm={6}>
-                          <InputLabel shrink>
-                            School Record <span>*</span>
-                          </InputLabel>
+                          <InputLabel shrink>School Record</InputLabel>
                           <input
                             type="file"
                             name="school_record"
@@ -1685,6 +1721,52 @@ const EditApplicationForm = () => {
           </form>
         </Box>
       </FormPaper>
+      {/* Modal */}
+      <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
+        <DialogTitle>
+          File Preview
+          <IconButton onClick={handleClose} sx={{ float: "right" }}>
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent dividers>
+          {!error ? (
+            <>
+              {imageUrl.endsWith(".pdf") ? (
+                <iframe
+                  src={imageUrl}
+                  title="PDF Preview"
+                  width="100%"
+                  height="600px"
+                  onError={() => setError(true)}
+                />
+              ) : imageUrl.match(/\.(jpeg|jpg|png|gif)$/i) ? (
+                <img
+                  src={imageUrl}
+                  alt="Preview"
+                  style={{
+                    width: "100%",
+                    maxHeight: "80vh",
+                    objectFit: "contain",
+                  }}
+                  onError={() => setError(true)}
+                />
+              ) : (
+                <Typography>
+                  Preview not supported for this file type.{" "}
+                  <a href={imageUrl} target="_blank" rel="noopener noreferrer">
+                    Click here to download or view.
+                  </a>
+                </Typography>
+              )}
+            </>
+          ) : (
+            <Typography color="error">
+              ⚠️ Unable to load the file. It may be missing or unsupported.
+            </Typography>
+          )}
+        </DialogContent>
+      </Dialog>
 
       <Snackbar
         open={!!alert}

@@ -210,8 +210,8 @@ const AddApplicationForm = () => {
     b_form_doc: "",
     disabled_parent_photo: "",
     child_photo: "",
-    school_record: "",
-    proof_of_address: "",
+    // school_record: "",
+    // proof_of_address: "",
   };
 
   const [formErrors, setFormErrors] = useState(initialFormErrors);
@@ -413,7 +413,7 @@ const AddApplicationForm = () => {
         return "";
       case "disabled_parent_photo":
       case "child_photo":
-      case "school_record":
+      // case "school_record":
       case "proof_of_address":
         if (!value) {
           return "Please upload a file";
@@ -610,8 +610,13 @@ const AddApplicationForm = () => {
       "school_record",
       "proof_of_address",
     ].forEach((field) => {
-      if (formData[field]) {
-        formDataObject.append(field, formData[field]);
+      const files = formData[field];
+
+      if (files) {
+        const fileArray = Array.isArray(files) ? files : [files];
+        fileArray.forEach((file) => {
+          formDataObject.append(field, file);
+        });
       }
     });
 
@@ -1522,9 +1527,7 @@ const AddApplicationForm = () => {
                           )}
                         </Grid>
                         <Grid item xs={12} sm={6}>
-                          <InputLabel shrink>
-                            School Record <span>*</span>
-                          </InputLabel>
+                          <InputLabel shrink>School Record</InputLabel>
                           <input
                             type="file"
                             name="school_record"
