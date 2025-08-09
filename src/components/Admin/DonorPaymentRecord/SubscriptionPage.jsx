@@ -135,6 +135,7 @@ export default function SubscriptionPage() {
     pledged_amount: "",
     amount_per_period: "",
     payment_frequency: "monthly",
+    start_date: "",
     is_active: true,
   });
 
@@ -184,6 +185,14 @@ export default function SubscriptionPage() {
       toast.success("Subscription added successfully!");
       setSubscriptionFormOpen(false);
       loadAll(); // reload data after adding
+      setSubscriptionFormData({
+        source: "",
+        pledged_amount: "",
+        amount_per_period: "",
+        payment_frequency: "monthly",
+        start_date: "",
+        is_active: true,
+      });
     } catch (error) {
       toast.error("Failed to add subscription");
       console.error(error.response?.data || error.message);

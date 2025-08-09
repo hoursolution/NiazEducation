@@ -66,7 +66,7 @@ const AdminDashboard = () => {
         </Box>
 
         {/* Button (aligned left) */}
-        <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 1 }}>
+        {/* <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 1 }}>
           <Button
             variant="contained"
             sx={{
@@ -83,11 +83,17 @@ const AdminDashboard = () => {
           >
             Donors List
           </Button>
-        </Box>
+        </Box> */}
       </Box>
 
       {/* cards */}
-      <Grid container rowSpacing={6} columnSpacing={3} justifyContent="center">
+      <Grid
+        container
+        rowSpacing={6}
+        columnSpacing={3}
+        justifyContent="center"
+        marginTop={1}
+      >
         {dashboardItems.map((item, index) => (
           <Grid item key={index} xs={12} sm={6} md={4} lg={3}>
             <Box

@@ -1654,8 +1654,8 @@ const ProjectionDataGrid = () => {
             >
               <Avatar
                 alt="Profile pic"
-                src={studentData?.profile_picture}
-                sx={{ width: 60, height: 60, marginLeft: "8px" }}
+                src={studentData?.child_photo?.[0]?.file || ""}
+                sx={{ width: 80, height: 80, marginLeft: "10px" }}
               />
             </StyledBadge>
             <Box
@@ -1699,7 +1699,8 @@ const ProjectionDataGrid = () => {
                 }}
               >
                 {studentData?.mobile_no || "N/A"} |{" "}
-                {studentData?.email || "N/A"} | {studentData?.city || "N/A"}
+                {/* {studentData?.email || "N/A"} |  */}
+                {studentData?.city || "N/A"}
               </Typography>
 
               {/* collage */}

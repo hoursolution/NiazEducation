@@ -382,7 +382,7 @@ const AddApplicationForm = () => {
       case "grade_interested_in":
       case "school_interested_in":
       case "program_addmision_date":
-      case "classes_commencement_date":
+        // case "classes_commencement_date":
         // Ensure value is a string before calling trim
         if (!value || (typeof value === "string" && !value.trim())) {
           return "This field is required";
@@ -414,11 +414,11 @@ const AddApplicationForm = () => {
       case "disabled_parent_photo":
       case "child_photo":
       // case "school_record":
-      case "proof_of_address":
-        if (!value) {
-          return "Please upload a file";
-        }
-        return "";
+      // case "proof_of_address":
+      //   if (!value) {
+      //     return "Please upload a file";
+      //   }
+      //   return "";
       case "has_medical_condition":
         if (value === "") {
           return "This field is required";
@@ -1288,7 +1288,7 @@ const AddApplicationForm = () => {
                         </Grid>
                         <Grid item xs={12} sm={6}>
                           <InputLabel shrink>
-                            Classes Commencement Date<span>*</span>
+                            Classes Commencement Date
                           </InputLabel>
                           <TextField
                             variant="outlined"
@@ -1297,8 +1297,7 @@ const AddApplicationForm = () => {
                             value={formData.classes_commencement_date}
                             onChange={handleChange}
                             fullWidth
-                            required
-                            error={!!formErrors.classes_commencement_date}
+                            // error={!!formErrors.classes_commencement_date}
                             helperText={formErrors.classes_commencement_date}
                           />
                         </Grid>
@@ -1556,16 +1555,14 @@ const AddApplicationForm = () => {
                               </IconButton>
                             </div>
                           )}
-                          {formErrors.school_record && (
+                          {/* {formErrors.school_record && (
                             <Typography color="error" variant="caption">
                               {formErrors.school_record}
                             </Typography>
-                          )}
+                          )} */}
                         </Grid>
                         <Grid item xs={12} sm={6}>
-                          <InputLabel shrink>
-                            Proof Of Address <span>*</span>
-                          </InputLabel>
+                          <InputLabel shrink>Proof Of Address</InputLabel>
                           <input
                             type="file"
                             name="proof_of_address"
@@ -1596,11 +1593,11 @@ const AddApplicationForm = () => {
                               </IconButton>
                             </div>
                           )}
-                          {formErrors.proof_of_address && (
+                          {/* {formErrors.proof_of_address && (
                             <Typography color="error" variant="caption">
                               {formErrors.proof_of_address}
                             </Typography>
-                          )}
+                          )} */}
                         </Grid>
                       </Grid>
                     </Paper>

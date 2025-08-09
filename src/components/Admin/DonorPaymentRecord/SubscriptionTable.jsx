@@ -57,6 +57,7 @@ export default function SubscriptionTable({ subscriptions }) {
             <TableCell align="center">Committed Amount</TableCell>
             <TableCell align="center">Installment Amount</TableCell>
             <TableCell align="center">Frequency</TableCell>
+            <TableCell align="center">Start Date</TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
@@ -72,6 +73,7 @@ export default function SubscriptionTable({ subscriptions }) {
                 <span style={{ fontSize: "0.75em" }}>PKR</span>
               </TableCell>
               <TableCell align="center">{sub.payment_frequency}</TableCell>
+              <TableCell align="center">{sub.start_date}</TableCell>
             </TableRow>
           ))}
         </TableBody>

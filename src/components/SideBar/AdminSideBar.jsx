@@ -62,17 +62,23 @@ export function SidebarOne({ isOpen, onClose, handleMenuItemClick }) {
       action: "INTERVIEW",
     },
     {
+      text: "Manage Donor",
+      icon: mentor,
+      path: "donors",
+      action: "MANAGE DONOR",
+    },
+    {
       text: "Select Donor",
       icon: donor,
       path: "selectDonor",
       action: "SELECT DONOR",
     },
-    {
-      text: "Select Mentor",
-      icon: mentor,
-      path: "selectMentor",
-      action: "SELECT MENTOR",
-    },
+    // {
+    //   text: "Select Mentor",
+    //   icon: mentor,
+    //   path: "selectMentor",
+    //   action: "SELECT MENTOR",
+    // },
     {
       text: "Projection Sheets",
       icon: projectionsheet,

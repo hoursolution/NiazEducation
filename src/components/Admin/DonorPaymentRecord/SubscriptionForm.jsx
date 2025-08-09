@@ -62,6 +62,7 @@ export default function SubscriptionForm({
           <InputLabel>Frequency</InputLabel>
           <Select
             value={formData.payment_frequency}
+            InputLabelProps={{ shrink: true }}
             onChange={(e) =>
               setFormData({ ...formData, payment_frequency: e.target.value })
             }
@@ -72,6 +73,18 @@ export default function SubscriptionForm({
             <MenuItem value="yearly">Yearly</MenuItem>
           </Select>
         </FormControl>
+
+        <TextField
+          fullWidth
+          label="Start Date"
+          InputLabelProps={{ shrink: true }}
+          type="date"
+          sx={{ mt: 2 }}
+          value={formData.start_date}
+          onChange={(e) =>
+            setFormData({ ...formData, start_date: e.target.value })
+          }
+        />
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose}>Cancel</Button>
