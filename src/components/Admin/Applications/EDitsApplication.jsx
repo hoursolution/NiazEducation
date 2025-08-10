@@ -141,9 +141,9 @@ const EditApplicationForm = () => {
   const [activeTab, setActiveTab] = useState(0);
   const [alert, setAlert] = useState(null);
   const [students, setStudents] = useState([]);
-  // const BASE_URL = "http://127.0.0.1:8000";
-  const BASE_URL =
-    "https://niazeducationscholarshipsbackend-production.up.railway.app";
+  const BASE_URL = "http://127.0.0.1:8000";
+  // const BASE_URL =
+  //   "https://niazeducationscholarshipsbackend-production.up.railway.app";
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -278,10 +278,10 @@ const EditApplicationForm = () => {
     total_fee_of_the_program: "",
     disabled_parent_cnic_doc: [],
     b_form_doc: [],
-    disabled_parent_photo: null,
-    child_photo: null,
-    school_record: null,
-    proof_of_address: null,
+    disabled_parent_photo: [],
+    child_photo: [],
+    school_record: [],
+    proof_of_address: [],
   });
 
   const handleTabChange = (event, newValue) => {
@@ -402,7 +402,7 @@ const EditApplicationForm = () => {
       case "grade_interested_in":
       case "school_interested_in":
       case "program_addmision_date":
-      case "classes_commencement_date":
+        // case "classes_commencement_date":
         // Ensure value is a string before calling trim
         if (!value || (typeof value === "string" && !value.trim())) {
           return "This field is required";
@@ -434,11 +434,11 @@ const EditApplicationForm = () => {
       case "disabled_parent_photo":
       case "child_photo":
       // case "school_record":
-      case "proof_of_address":
-        if (!value) {
-          return "Please upload a file";
-        }
-        return "";
+      // case "proof_of_address":
+      //   if (!value) {
+      //     return "Please upload a file";
+      //   }
+      //   return "";
       case "has_medical_condition":
         if (value === "") {
           return "This field is required";
@@ -560,17 +560,15 @@ const EditApplicationForm = () => {
   const [deletedDocumentIds, setDeletedDocumentIds] = useState([]);
 
   const handleRemoveFile = (field, index) => {
-    const updatedFiles = [...formData[field]];
+    const fileToRemove = formData[field][index];
 
-    const fileToRemove = updatedFiles[index];
-    if (fileToRemove && fileToRemove.id) {
+    if (fileToRemove.id) {
       setDeletedDocumentIds((prev) => [...prev, fileToRemove.id]);
     }
 
-    updatedFiles.splice(index, 1);
     setFormData((prev) => ({
       ...prev,
-      [field]: updatedFiles,
+      [field]: prev[field].filter((_, i) => i !== index),
     }));
   };
 
@@ -1366,7 +1364,7 @@ const EditApplicationForm = () => {
                         </Grid>
                         <Grid item xs={12} sm={6}>
                           <InputLabel shrink>
-                            Classes Commencement Date<span>*</span>
+                            Classes Commencement Date
                           </InputLabel>
                           <TextField
                             variant="outlined"
@@ -1375,9 +1373,9 @@ const EditApplicationForm = () => {
                             value={formData.classes_commencement_date}
                             onChange={handleChange}
                             fullWidth
-                            required
-                            error={!!formErrors.classes_commencement_date}
-                            helperText={formErrors.classes_commencement_date}
+                            // required
+                            // error={!!formErrors.classes_commencement_date}
+                            // helperText={formErrors.classes_commencement_date}
                           />
                         </Grid>
                         <Grid item xs={12} sm={6}>
@@ -1447,6 +1445,7 @@ const EditApplicationForm = () => {
                     <Paper sx={{ padding: 3, borderRadius: 3, mb: 3 }}>
                       <SectionTitle variant="h6">Documents</SectionTitle>
                       <Grid container spacing={2}>
+                        {/* Disabled Parent CNIC Doc */}
                         <Grid item xs={12} sm={6}>
                           <InputLabel shrink>
                             Disabled Parent CNIC Doc <span>*</span>
@@ -1485,12 +1484,9 @@ const EditApplicationForm = () => {
                               </div>
                             )
                           )}
-                          {formErrors.disabled_parent_cnic_doc && (
-                            <Typography color="error" variant="caption">
-                              {formErrors.disabled_parent_cnic_doc}
-                            </Typography>
-                          )}
                         </Grid>
+
+                        {/* B-Form Doc */}
                         <Grid item xs={12} sm={6}>
                           <InputLabel shrink>
                             B-Form Doc <span>*</span>
@@ -1522,12 +1518,9 @@ const EditApplicationForm = () => {
                               </IconButton>
                             </div>
                           ))}
-                          {formErrors.b_form_doc && (
-                            <Typography color="error" variant="caption">
-                              {formErrors.b_form_doc}
-                            </Typography>
-                          )}
                         </Grid>
+
+                        {/* Disabled Parent Photo */}
                         <Grid item xs={12} sm={6}>
                           <InputLabel shrink>
                             Disabled Parent Photo <span>*</span>
@@ -1535,39 +1528,38 @@ const EditApplicationForm = () => {
                           <input
                             type="file"
                             name="disabled_parent_photo"
-                            accept=".jpeg, .jpg, .png"
-                            onChange={handleChange}
+                            accept=".pdf, .jpeg, .jpg, .png, .docx"
+                            onChange={(e) =>
+                              handleFileChange(e, "disabled_parent_photo")
+                            }
+                            multiple
                           />
-                          {formData.disabled_parent_photo && (
-                            <div style={{ marginTop: "8px" }}>
+                          {formData.disabled_parent_photo.map((file, index) => (
+                            <div key={index} style={{ marginTop: "8px" }}>
                               <Button
                                 variant="outlined"
                                 size="small"
-                                onClick={() =>
-                                  handleViewFileDetails(
-                                    formData.disabled_parent_photo
-                                  )
-                                }
+                                onClick={() => handleViewFileDetails(file)}
                               >
-                                View File
+                                View File {index + 1}
                               </Button>
                               <IconButton
                                 size="small"
                                 onClick={() =>
-                                  handleRemoveFile("disabled_parent_photo")
+                                  handleRemoveFile(
+                                    "disabled_parent_photo",
+                                    index
+                                  )
                                 }
                                 sx={{ color: "red", marginLeft: 1 }}
                               >
                                 Remove
                               </IconButton>
                             </div>
-                          )}
-                          {formErrors.disabled_parent_photo && (
-                            <Typography color="error" variant="caption">
-                              {formErrors.disabled_parent_photo}
-                            </Typography>
-                          )}
+                          ))}
                         </Grid>
+
+                        {/* Child Photo */}
                         <Grid item xs={12} sm={6}>
                           <InputLabel shrink>
                             Child Photo <span>*</span>
@@ -1575,71 +1567,67 @@ const EditApplicationForm = () => {
                           <input
                             type="file"
                             name="child_photo"
-                            accept=".jpeg, .jpg, .png"
-                            onChange={handleChange}
+                            accept=".pdf, .jpeg, .jpg, .png, .docx"
+                            onChange={(e) => handleFileChange(e, "child_photo")}
+                            multiple
                           />
-                          {formData.child_photo && (
-                            <div style={{ marginTop: "8px" }}>
+                          {formData.child_photo.map((file, index) => (
+                            <div key={index} style={{ marginTop: "8px" }}>
                               <Button
                                 variant="outlined"
                                 size="small"
-                                onClick={() =>
-                                  handleViewFileDetails(formData.child_photo)
-                                }
+                                onClick={() => handleViewFileDetails(file)}
                               >
-                                View File
+                                View File {index + 1}
                               </Button>
                               <IconButton
                                 size="small"
-                                onClick={() => handleRemoveFile("child_photo")}
+                                onClick={() =>
+                                  handleRemoveFile("child_photo", index)
+                                }
                                 sx={{ color: "red", marginLeft: 1 }}
                               >
                                 Remove
                               </IconButton>
                             </div>
-                          )}
-                          {formErrors.child_photo && (
-                            <Typography color="error" variant="caption">
-                              {formErrors.child_photo}
-                            </Typography>
-                          )}
+                          ))}
                         </Grid>
+
+                        {/* School Record */}
                         <Grid item xs={12} sm={6}>
                           <InputLabel shrink>School Record</InputLabel>
                           <input
                             type="file"
                             name="school_record"
-                            accept=".jpeg, .jpg, .png"
-                            onChange={handleChange}
+                            accept=".pdf, .jpeg, .jpg, .png, .docx"
+                            onChange={(e) =>
+                              handleFileChange(e, "school_record")
+                            }
+                            multiple
                           />
-                          {formData.school_record && (
-                            <div style={{ marginTop: "8px" }}>
+                          {formData.school_record.map((file, index) => (
+                            <div key={index} style={{ marginTop: "8px" }}>
                               <Button
                                 variant="outlined"
                                 size="small"
-                                onClick={() =>
-                                  handleViewFileDetails(formData.school_record)
-                                }
+                                onClick={() => handleViewFileDetails(file)}
                               >
-                                View File
+                                View File {index + 1}
                               </Button>
                               <IconButton
                                 size="small"
                                 onClick={() =>
-                                  handleRemoveFile("school_record")
+                                  handleRemoveFile("school_record", index)
                                 }
                                 sx={{ color: "red", marginLeft: 1 }}
                               >
                                 Remove
                               </IconButton>
                             </div>
-                          )}
-                          {formErrors.school_record && (
-                            <Typography color="error" variant="caption">
-                              {formErrors.school_record}
-                            </Typography>
-                          )}
+                          ))}
                         </Grid>
+
+                        {/* Proof Of Address */}
                         <Grid item xs={12} sm={6}>
                           <InputLabel shrink>
                             Proof Of Address <span>*</span>
@@ -1647,38 +1635,32 @@ const EditApplicationForm = () => {
                           <input
                             type="file"
                             name="proof_of_address"
-                            accept=".jpeg, .jpg, .png"
-                            onChange={handleChange}
+                            accept=".pdf, .jpeg, .jpg, .png, .docx"
+                            onChange={(e) =>
+                              handleFileChange(e, "proof_of_address")
+                            }
+                            multiple
                           />
-                          {formData.proof_of_address && (
-                            <div style={{ marginTop: "8px" }}>
+                          {formData.proof_of_address.map((file, index) => (
+                            <div key={index} style={{ marginTop: "8px" }}>
                               <Button
                                 variant="outlined"
                                 size="small"
-                                onClick={() =>
-                                  handleViewFileDetails(
-                                    formData.proof_of_address
-                                  )
-                                }
+                                onClick={() => handleViewFileDetails(file)}
                               >
-                                View File
+                                View File {index + 1}
                               </Button>
                               <IconButton
                                 size="small"
                                 onClick={() =>
-                                  handleRemoveFile("proof_of_address")
+                                  handleRemoveFile("proof_of_address", index)
                                 }
                                 sx={{ color: "red", marginLeft: 1 }}
                               >
                                 Remove
                               </IconButton>
                             </div>
-                          )}
-                          {formErrors.proof_of_address && (
-                            <Typography color="error" variant="caption">
-                              {formErrors.proof_of_address}
-                            </Typography>
-                          )}
+                          ))}
                         </Grid>
                       </Grid>
                     </Paper>
