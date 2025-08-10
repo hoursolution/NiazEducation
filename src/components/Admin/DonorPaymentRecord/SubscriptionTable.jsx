@@ -8,10 +8,39 @@ import {
   Paper,
   Typography,
   Box,
+  IconButton,
 } from "@mui/material";
+import DeleteIcon from "@mui/icons-material/Delete";
 
-export default function SubscriptionTable({ subscriptions }) {
-  console.log(subscriptions);
+export default function SubscriptionTable({
+  subscriptions,
+  setSubscriptions,
+  onRefresh,
+}) {
+  // Delete function inside the table
+  const handleDelete = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this subscription?"))
+      return;
+
+    try {
+      const res = await fetch(
+        `https://niazeducationscholarshipsbackend-production.up.railway.app/api/subscriptions/${id}/`,
+        {
+          method: "DELETE",
+        }
+      );
+      if (res.ok) {
+        setSubscriptions((prev) => prev.filter((s) => s.id !== id));
+        if (onRefresh) onRefresh();
+      } else {
+        alert("Failed to delete subscription");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error deleting subscription");
+    }
+  };
+
   return (
     <Paper
       elevation={1}
@@ -40,15 +69,9 @@ export default function SubscriptionTable({ subscriptions }) {
             fontWeight: 600,
             textAlign: "center",
           },
-          "& td": {
-            textAlign: "center",
-          },
-          "& td, & th": {
-            borderBottom: "1px solid #e0e0e0",
-          },
-          "& tr:hover": {
-            backgroundColor: "#f5f5f5",
-          },
+          "& td": { textAlign: "center" },
+          "& td, & th": { borderBottom: "1px solid #e0e0e0" },
+          "& tr:hover": { backgroundColor: "#f5f5f5" },
         }}
       >
         <TableHead>
@@ -58,6 +81,7 @@ export default function SubscriptionTable({ subscriptions }) {
             <TableCell align="center">Installment Amount</TableCell>
             <TableCell align="center">Frequency</TableCell>
             <TableCell align="center">Start Date</TableCell>
+            <TableCell align="center">Actions</TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
@@ -74,6 +98,11 @@ export default function SubscriptionTable({ subscriptions }) {
               </TableCell>
               <TableCell align="center">{sub.payment_frequency}</TableCell>
               <TableCell align="center">{sub.start_date}</TableCell>
+              <TableCell align="center">
+                <IconButton color="error" onClick={() => handleDelete(sub.id)}>
+                  <DeleteIcon />
+                </IconButton>
+              </TableCell>
             </TableRow>
           ))}
         </TableBody>

@@ -342,7 +342,11 @@ export default function SubscriptionPage() {
       </Card>
 
       {/* funding plan */}
-      <SubscriptionTable subscriptions={subscriptions} />
+      <SubscriptionTable
+        subscriptions={subscriptions}
+        setSubscriptions={setSubscriptions}
+        onRefresh={loadAll} // pass down refresh
+      />
 
       <Divider sx={{ my: 4 }}>
         <Chip
