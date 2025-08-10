@@ -141,9 +141,9 @@ const EditApplicationForm = () => {
   const [activeTab, setActiveTab] = useState(0);
   const [alert, setAlert] = useState(null);
   const [students, setStudents] = useState([]);
-  const BASE_URL = "http://127.0.0.1:8000";
-  // const BASE_URL =
-  //   "https://niazeducationscholarshipsbackend-production.up.railway.app";
+  // const BASE_URL = "http://127.0.0.1:8000";
+  const BASE_URL =
+    "https://niazeducationscholarshipsbackend-production.up.railway.app";
 
   useEffect(() => {
     const token = localStorage.getItem("token");
