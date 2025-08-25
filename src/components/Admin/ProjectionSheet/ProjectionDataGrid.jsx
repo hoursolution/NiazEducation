@@ -207,6 +207,7 @@ const ProjectionDataGrid = () => {
     totalPaid: 0,
     remainingBalance: 0,
   });
+
   // State to track selected files before upload
   const [fileErrors, setFileErrors] = useState({});
 
@@ -262,7 +263,13 @@ const ProjectionDataGrid = () => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
-
+  const handleEditChange = (e) => {
+    const { name, value } = e.target;
+    setEditRow((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
   const handleFileChanges = (e) => {
     const { name, files } = e.target;
     setFormData({ ...formData, [name]: files[0] });
@@ -546,50 +553,62 @@ const ProjectionDataGrid = () => {
     }));
   };
 
-  const handleFileChange = (e, fieldName) => {
-    const file = e.target.files[0];
-    let error = null;
+  const handleFileChange = (e, docType) => {
+    const files = Array.from(e.target.files); // normalize to array
 
-    if (file) {
-      // Validate file type
-      if (!ACCEPTED_FILE_TYPES.includes(file.type)) {
-        error = "Invalid file type (only PDF, JPG, PNG allowed)";
-      }
-      // Validate file size
-      else if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
-        error = `File too large (max ${MAX_FILE_SIZE_MB}MB)`;
-      }
-
-      if (error) {
-        setFileErrors((prev) => ({ ...prev, [fieldName]: error }));
-        setSelectedFiles((prev) => ({ ...prev, [fieldName]: null }));
+    setSelectedFiles((prev) => {
+      if (docType === "challan") {
+        // Multiple challans → merge with previous
+        return {
+          ...prev,
+          [docType]: [...(prev[docType] || []), ...files],
+        };
       } else {
-        setSelectedFiles((prev) => ({ ...prev, [fieldName]: file }));
-        setFileErrors((prev) => ({ ...prev, [fieldName]: null }));
-        // Preview file immediately (creates object URL)
-        const fileUrl = URL.createObjectURL(file);
-        handleInputChange({
-          target: {
-            name: fieldName,
-            value: fileUrl,
-          },
-        });
+        // Single file → just first one
+        return {
+          ...prev,
+          [docType]: files[0],
+        };
       }
-    } else {
-      setSelectedFiles((prev) => ({ ...prev, [fieldName]: null }));
-    }
+    });
+
+    e.target.value = null; // allow reselect same file
   };
 
-  const handleOpenModal = (url, type) => {
-    setFileUrl(url);
+  const clearFileSelection = (docType, index = null) => {
+    setSelectedFiles((prev) => {
+      if (docType === "challan") {
+        const newFiles = [...(prev[docType] || [])];
+        newFiles.splice(index, 1); // remove only one challan file
+        return { ...prev, [docType]: newFiles };
+      } else {
+        return { ...prev, [docType]: null }; // reset single file
+      }
+    });
+  };
+
+  // State
+  const [fileUrls, setFileUrls] = useState([]);
+  const [currentFileIndex, setCurrentFileIndex] = useState(0);
+
+  // Helpers
+  const isImage = (url) => /\.(jpg|jpeg|png|gif|bmp|webp)$/i.test(url);
+  const isPDF = (url) => /\.pdf$/i.test(url);
+
+  const handleOpenModal = (urls, type) => {
+    const normalizedUrls = Array.isArray(urls) ? urls : [urls];
+    setFileUrls(normalizedUrls);
+    setCurrentFileIndex(0);
     setDocumentType(type);
     setOpenModal(true);
   };
 
   const handleCloseModal = () => {
     setOpenModal(false);
-    setFileUrl(null);
+    setFileUrls([]);
+    setCurrentFileIndex(0);
   };
+
   const handleFormSubmit = async () => {
     try {
       const token = localStorage.getItem("token");
@@ -623,7 +642,7 @@ const ProjectionDataGrid = () => {
       });
       console.log(formData);
       const response = await axios.patch(
-        `${BASE_URL}/projections/${editRow.id}/update/`,
+        `${BASE_URL}/api/projections/${editRow.id}/update/`,
         formData,
         {
           headers: {
@@ -680,6 +699,14 @@ const ProjectionDataGrid = () => {
   const handleViewDocument = (row, documentType) => {
     let url = "";
     switch (documentType) {
+      case "challan_files":
+        if (row.challan_files && row.challan_files.length > 0) {
+          const urls = row.challan_files.map((f) => f.file); // 👈 extract just the file URLs
+          handleOpenModal(urls, documentType);
+        } else {
+          console.error("No challan files found");
+        }
+        return;
       case "challan":
         url = row.challan; // Assuming `row.challan_document_url` holds the URL
         break;
@@ -940,11 +967,13 @@ const ProjectionDataGrid = () => {
               <span className="text-red-600 text-[12px]">no date</span>
             )}
           </Typography>
-          {params.row.challan ? (
-            <Tooltip title="View Challan">
+          {params.row.challan_files && params.row.challan_files.length > 0 ? (
+            <Tooltip
+              title={`View ${params.row.challan_files.length} Challan File(s)`}
+            >
               <IconButton
                 color="info"
-                onClick={() => handleViewDocument(params.row, "challan")}
+                onClick={() => handleViewDocument(params.row, "challan_files")}
                 size="small"
               >
                 <DescriptionIcon fontSize="small" />
@@ -1810,19 +1839,40 @@ const ProjectionDataGrid = () => {
         >
           <Box
             sx={{
-              backgroundColor: "#f9f9f9",
+              backgroundColor: "#f9fafb",
               padding: { xs: 2, sm: 3 },
-              marginBottom: 2,
+              marginBottom: 3,
               borderRadius: 2,
-              boxShadow: 3,
+              boxShadow: "0 4px 20px rgba(0, 0, 0, 0.05)",
             }}
           >
-            <Paper elevation={3} sx={{ padding: { xs: 2, sm: 3 } }}>
-              <Typography variant="h5" align="center" gutterBottom>
+            <Paper
+              elevation={0}
+              sx={{
+                padding: { xs: 2, sm: 3 },
+                borderRadius: 2,
+                bgcolor: "white",
+                boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
+                transition: "box-shadow 0.2s ease",
+                "&:hover": {
+                  boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+                },
+              }}
+            >
+              <Typography
+                variant="h5"
+                align="center"
+                gutterBottom
+                sx={{
+                  fontWeight: 600,
+                  color: "text.primary",
+                  letterSpacing: "0.02em",
+                }}
+              >
                 Add Projection
               </Typography>
               <form onSubmit={handleSubmit}>
-                <Grid container spacing={3}>
+                <Grid container spacing={2}>
                   {/* Semester Number */}
                   <Grid item xs={12} sm={6} md={4}>
                     <TextField
@@ -1835,6 +1885,15 @@ const ProjectionDataGrid = () => {
                       variant="outlined"
                       size="small"
                       required
+                      sx={{
+                        "& .MuiOutlinedInput-root": {
+                          borderRadius: 1,
+                          bgcolor: "white",
+                        },
+                        "& .MuiInputLabel-root": {
+                          fontWeight: 500,
+                        },
+                      }}
                     />
                   </Grid>
 
@@ -1850,6 +1909,15 @@ const ProjectionDataGrid = () => {
                       variant="outlined"
                       size="small"
                       required
+                      sx={{
+                        "& .MuiOutlinedInput-root": {
+                          borderRadius: 1,
+                          bgcolor: "white",
+                        },
+                        "& .MuiInputLabel-root": {
+                          fontWeight: 500,
+                        },
+                      }}
                     />
                   </Grid>
 
@@ -1864,6 +1932,15 @@ const ProjectionDataGrid = () => {
                       onChange={handleChange}
                       variant="outlined"
                       size="small"
+                      sx={{
+                        "& .MuiOutlinedInput-root": {
+                          borderRadius: 1,
+                          bgcolor: "white",
+                        },
+                        "& .MuiInputLabel-root": {
+                          fontWeight: 500,
+                        },
+                      }}
                     />
                   </Grid>
 
@@ -1879,6 +1956,15 @@ const ProjectionDataGrid = () => {
                       variant="outlined"
                       size="small"
                       required
+                      sx={{
+                        "& .MuiOutlinedInput-root": {
+                          borderRadius: 1,
+                          bgcolor: "white",
+                        },
+                        "& .MuiInputLabel-root": {
+                          fontWeight: 500,
+                        },
+                      }}
                     />
                   </Grid>
 
@@ -1911,6 +1997,15 @@ const ProjectionDataGrid = () => {
                         onChange={handleInputChange}
                         fullWidth
                         type="number"
+                        sx={{
+                          "& .MuiOutlinedInput-root": {
+                            borderRadius: 1,
+                            bgcolor: "white",
+                          },
+                          "& .MuiInputLabel-root": {
+                            fontWeight: 500,
+                          },
+                        }}
                       />
                     </Grid>
                   ))}
@@ -1927,6 +2022,15 @@ const ProjectionDataGrid = () => {
                       variant="outlined"
                       size="small"
                       InputLabelProps={{ shrink: true }}
+                      sx={{
+                        "& .MuiOutlinedInput-root": {
+                          borderRadius: 1,
+                          bgcolor: "white",
+                        },
+                        "& .MuiInputLabel-root": {
+                          fontWeight: 500,
+                        },
+                      }}
                     />
                   </Grid>
 
@@ -1941,18 +2045,31 @@ const ProjectionDataGrid = () => {
                       onChange={handleChange}
                       variant="outlined"
                       size="small"
+                      sx={{
+                        "& .MuiOutlinedInput-root": {
+                          borderRadius: 1,
+                          bgcolor: "white",
+                        },
+                        "& .MuiInputLabel-root": {
+                          fontWeight: 500,
+                        },
+                      }}
                     />
                   </Grid>
 
                   {/* Status */}
                   <Grid item xs={12} sm={6} md={6}>
                     <FormControl fullWidth size="small">
-                      <InputLabel>Status</InputLabel>
+                      <InputLabel sx={{ fontWeight: 500 }}>Status</InputLabel>
                       <Select
                         name="status"
                         value={formData.status}
                         onChange={handleChange}
                         label="Status"
+                        sx={{
+                          borderRadius: 1,
+                          bgcolor: "white",
+                        }}
                       >
                         <MenuItem value="NYD">NYD</MenuItem>
                         <MenuItem value="Due">Due</MenuItem>
@@ -1986,30 +2103,92 @@ const ProjectionDataGrid = () => {
                     },
                   ].map((field) => (
                     <Grid item xs={12} sm={6} md={6} key={field.name}>
-                      <Typography variant="subtitle2" gutterBottom>
-                        {field.label}
-                      </Typography>
-                      <input
-                        type="file"
-                        name={field.name}
-                        onChange={handleFileChanges}
-                        style={{ marginBottom: "8px", width: "100%" }}
-                      />
-                      {filePreviews[field.name] && (
-                        <Button
-                          variant="contained"
-                          color="primary"
-                          size="small"
-                          onClick={() =>
-                            handleViewDocuments(
-                              filePreviews[field.name],
-                              field.label
-                            )
-                          }
+                      <Box
+                        sx={{
+                          border: "1px solid #e5e7eb",
+                          borderRadius: 2,
+                          p: 2,
+                          bgcolor: "white",
+                          boxShadow: "0 1px 3px rgba(0, 0, 0, 0.05)",
+                          transition: "box-shadow 0.2s ease",
+                          "&:hover": {
+                            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
+                          },
+                        }}
+                      >
+                        <Typography
+                          variant="subtitle2"
+                          gutterBottom
+                          sx={{ fontWeight: 500 }}
                         >
-                          View {field.label}
-                        </Button>
-                      )}
+                          {field.label}
+                        </Typography>
+                        <label htmlFor={`upload-${field.name}`}>
+                          <Button
+                            component="span"
+                            variant="outlined"
+                            color="primary"
+                            startIcon={field.icon}
+                            fullWidth
+                            sx={{
+                              borderRadius: 1,
+                              textTransform: "none",
+                              fontWeight: 500,
+                              py: 1,
+                              mb: 1,
+                            }}
+                          >
+                            Upload {field.label}
+                          </Button>
+                          <input
+                            id={`upload-${field.name}`}
+                            type="file"
+                            name={field.name}
+                            onChange={handleFileChanges}
+                            accept=".pdf,.jpg,.jpeg,.png"
+                            hidden
+                          />
+                        </label>
+                        {filePreviews[field.name] && (
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 1.5,
+                              mt: 1,
+                              p: 1,
+                              borderRadius: 1,
+                              bgcolor: "#f3f4f6",
+                            }}
+                          >
+                            <Typography
+                              variant="body2"
+                              noWrap
+                              sx={{ flex: 1, color: "text.secondary" }}
+                            >
+                              {filePreviews[field.name].name}
+                            </Typography>
+                            <Button
+                              variant="contained"
+                              color="primary"
+                              size="small"
+                              onClick={() =>
+                                handleViewDocuments(
+                                  filePreviews[field.name],
+                                  field.label
+                                )
+                              }
+                              sx={{
+                                borderRadius: 1,
+                                textTransform: "none",
+                                fontWeight: 500,
+                              }}
+                            >
+                              View {field.label}
+                            </Button>
+                          </Box>
+                        )}
+                      </Box>
                     </Grid>
                   ))}
 
@@ -2025,6 +2204,15 @@ const ProjectionDataGrid = () => {
                       fullWidth
                       multiline
                       rows={2}
+                      sx={{
+                        "& .MuiOutlinedInput-root": {
+                          borderRadius: 1,
+                          bgcolor: "white",
+                        },
+                        "& .MuiInputLabel-root": {
+                          fontWeight: 500,
+                        },
+                      }}
                     />
                   </Grid>
 
@@ -2034,10 +2222,21 @@ const ProjectionDataGrid = () => {
                       sx={{
                         display: "flex",
                         justifyContent: "center",
-                        marginTop: 2,
+                        marginTop: 3,
                       }}
                     >
-                      <Button type="submit" variant="contained" color="primary">
+                      <Button
+                        type="submit"
+                        variant="contained"
+                        color="primary"
+                        sx={{
+                          borderRadius: 1,
+                          textTransform: "none",
+                          fontWeight: 500,
+                          px: 4,
+                          py: 1,
+                        }}
+                      >
                         Submit
                       </Button>
                     </Box>
@@ -2124,21 +2323,30 @@ const ProjectionDataGrid = () => {
           onClose={() => setIsEditModalOpen(false)}
           fullWidth
           maxWidth="md"
+          sx={{
+            "& .MuiDialog-paper": {
+              borderRadius: 2,
+              boxShadow: "0 4px 20px rgba(0, 0, 0, 0.1)",
+              overflow: "hidden",
+            },
+          }}
         >
           <DialogTitle
             sx={{
               bgcolor: "primary.main",
               color: "white",
-              p: 2,
-              fontSize: "1.2rem",
+              p: 1,
+              fontSize: "1.25rem",
+              fontWeight: 600,
+              letterSpacing: "0.05em",
             }}
           >
             Edit Projection
           </DialogTitle>
-          <DialogContent sx={{ p: 2 }}>
-            <Grid container spacing={3} sx={{ mb: 2, mt: 2 }}>
+          <DialogContent sx={{ p: 2, bgcolor: "#f9fafb" }}>
+            <Grid container spacing={2} sx={{ mb: 2, mt: 2 }}>
               {/* Row 1 */}
-              <Grid item xs={6} sm={4} md={3}>
+              <Grid item xs={12} sm={6} md={3}>
                 <TextField
                   size="small"
                   label="Month"
@@ -2146,155 +2354,249 @@ const ProjectionDataGrid = () => {
                   value={editRow?.semester_number || ""}
                   InputProps={{ readOnly: true }}
                   fullWidth
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      borderRadius: 1,
+                      bgcolor: "white",
+                    },
+                  }}
                 />
               </Grid>
-              <Grid item xs={6} sm={4} md={3}>
+              <Grid item xs={12} sm={6} md={3}>
                 <TextField
                   size="small"
                   label="Sponsor"
                   name="sponsor_name"
                   value={editRow?.sponsor_name || ""}
-                  onChange={handleInputChange}
+                  onChange={handleEditChange}
                   fullWidth
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      borderRadius: 1,
+                      bgcolor: "white",
+                    },
+                  }}
                 />
               </Grid>
-              <Grid item xs={6} sm={4} md={3}>
+              <Grid item xs={12} sm={6} md={3}>
                 <TextField
                   size="small"
                   label="Total Amount"
                   name="total_amount"
                   type="number"
                   value={editRow?.total_amount || ""}
-                  onChange={handleInputChange}
+                  onChange={handleEditChange}
                   fullWidth
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      borderRadius: 1,
+                      bgcolor: "white",
+                    },
+                  }}
                 />
               </Grid>
-              <Grid item xs={6} sm={4} md={3}>
+              <Grid item xs={12} sm={6} md={3}>
                 <TextField
                   size="small"
                   label="Admission Fee"
                   name="admission_fee_contribution"
                   value={editRow?.admission_fee_contribution || ""}
-                  onChange={handleInputChange}
+                  onChange={handleEditChange}
                   fullWidth
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      borderRadius: 1,
+                      bgcolor: "white",
+                    },
+                  }}
                 />
               </Grid>
 
               {/* Row 2 */}
-              <Grid item xs={6} sm={4} md={3}>
+              <Grid item xs={12} sm={6} md={3}>
                 <TextField
                   size="small"
                   label="Monthly Tuition Fee"
                   name="education_fee_contribution"
                   value={editRow?.education_fee_contribution || ""}
-                  onChange={handleInputChange}
+                  onChange={handleEditChange}
                   fullWidth
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      borderRadius: 1,
+                      bgcolor: "white",
+                    },
+                  }}
                 />
               </Grid>
-              <Grid item xs={6} sm={4} md={3}>
+              <Grid item xs={12} sm={6} md={3}>
                 <TextField
                   size="small"
                   label="Other Costs"
                   name="other_cost_contribution"
                   value={editRow?.other_cost_contribution || ""}
-                  onChange={handleInputChange}
+                  onChange={handleEditChange}
                   fullWidth
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      borderRadius: 1,
+                      bgcolor: "white",
+                    },
+                  }}
                 />
               </Grid>
-              <Grid item xs={6} sm={4} md={3}>
+              <Grid item xs={12} sm={6} md={3}>
                 <TextField
                   size="small"
                   label="Transportation Fee"
                   name="transport_contribution"
                   value={editRow?.transport_contribution || ""}
-                  onChange={handleInputChange}
+                  onChange={handleEditChange}
                   fullWidth
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      borderRadius: 1,
+                      bgcolor: "white",
+                    },
+                  }}
                 />
               </Grid>
-              <Grid item xs={6} sm={4} md={3}>
+              <Grid item xs={12} sm={6} md={3}>
                 <TextField
                   size="small"
                   label="Health Insurance"
                   name="health_insurance_contribution"
                   value={editRow?.health_insurance_contribution || ""}
-                  onChange={handleInputChange}
+                  onChange={handleEditChange}
                   fullWidth
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      borderRadius: 1,
+                      bgcolor: "white",
+                    },
+                  }}
                 />
               </Grid>
 
               {/* Row 3 */}
-              <Grid item xs={6} sm={4} md={3}>
+              <Grid item xs={12} sm={6} md={3}>
                 <TextField
                   size="small"
                   label="Eid al-Adha"
                   name="eid_al_adha_contribution"
                   value={editRow?.eid_al_adha_contribution || ""}
-                  onChange={handleInputChange}
+                  onChange={handleEditChange}
                   fullWidth
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      borderRadius: 1,
+                      bgcolor: "white",
+                    },
+                  }}
                 />
               </Grid>
-              <Grid item xs={6} sm={4} md={3}>
+              <Grid item xs={12} sm={6} md={3}>
                 <TextField
                   size="small"
                   label="Eid al-Fitr"
                   name="eid_al_fitr_contribution"
                   value={editRow?.eid_al_fitr_contribution || ""}
-                  onChange={handleInputChange}
+                  onChange={handleEditChange}
                   fullWidth
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      borderRadius: 1,
+                      bgcolor: "white",
+                    },
+                  }}
                 />
               </Grid>
-              <Grid item xs={6} sm={4} md={3}>
+              <Grid item xs={12} sm={6} md={3}>
                 <TextField
                   size="small"
                   label="Birthday Gift"
                   name="birthday_contribution"
                   value={editRow?.birthday_contribution || ""}
-                  onChange={handleInputChange}
+                  onChange={handleEditChange}
                   fullWidth
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      borderRadius: 1,
+                      bgcolor: "white",
+                    },
+                  }}
                 />
               </Grid>
-              <Grid item xs={6} sm={4} md={3}>
+              <Grid item xs={12} sm={6} md={3}>
                 <TextField
                   size="small"
                   label="Uniform Cost"
                   name="uniform_contribution"
                   value={editRow?.uniform_contribution || ""}
-                  onChange={handleInputChange}
+                  onChange={handleEditChange}
                   fullWidth
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      borderRadius: 1,
+                      bgcolor: "white",
+                    },
+                  }}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6} md={3}>
+                <TextField
+                  size="small"
+                  label="Books and supplies"
+                  name="books_supplies_contribution"
+                  value={editRow?.books_supplies_contribution || ""}
+                  onChange={handleEditChange}
+                  fullWidth
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      borderRadius: 1,
+                      bgcolor: "white",
+                    },
+                  }}
                 />
               </Grid>
 
               {/* Dates Section */}
-              {/* <Grid item xs={12} sx={{ mt: 1 }}>
-                <Typography variant="subtitle2" color="textSecondary">
-                  Payment Dates
-                </Typography>
-              </Grid> */}
-
-              <Grid item xs={6} sm={4} md={3}>
+              <Grid item xs={12} sm={6} md={3}>
                 <TextField
                   size="small"
                   label="Estimated Date"
                   name="Projection_ending_date"
                   type="date"
                   value={editRow?.Projection_ending_date || ""}
-                  onChange={handleInputChange}
+                  onChange={handleEditChange}
                   InputLabelProps={{ shrink: true }}
                   fullWidth
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      borderRadius: 1,
+                      bgcolor: "white",
+                    },
+                  }}
                 />
               </Grid>
-              <Grid item xs={6} sm={4} md={3}>
+              <Grid item xs={12} sm={6} md={3}>
                 <TextField
                   size="small"
-                  label="Actual Amount"
+                  label="Actual Amount of challan"
                   name="actual_amount_of_challan"
                   type="number"
                   value={editRow?.actual_amount_of_challan || ""}
-                  onChange={handleInputChange}
+                  onChange={handleEditChange}
                   fullWidth
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      borderRadius: 1,
+                      bgcolor: "white",
+                    },
+                  }}
                 />
               </Grid>
-              <Grid item xs={6} sm={4} md={3}>
+              <Grid item xs={12} sm={6} md={3}>
                 <TextField
                   size="small"
                   label="Challan Date"
@@ -2302,11 +2604,17 @@ const ProjectionDataGrid = () => {
                   type="date"
                   value={editRow?.challan_date || ""}
                   InputLabelProps={{ shrink: true }}
-                  onChange={handleInputChange}
+                  onChange={handleEditChange}
                   fullWidth
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      borderRadius: 1,
+                      bgcolor: "white",
+                    },
+                  }}
                 />
               </Grid>
-              <Grid item xs={6} sm={4} md={3}>
+              <Grid item xs={12} sm={6} md={3}>
                 <TextField
                   size="small"
                   label="Due Date"
@@ -2315,18 +2623,26 @@ const ProjectionDataGrid = () => {
                   value={editRow?.challan_due_date || ""}
                   InputLabelProps={{ shrink: true }}
                   fullWidth
-                  onChange={handleInputChange}
+                  onChange={handleEditChange}
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      borderRadius: 1,
+                      bgcolor: "white",
+                    },
+                  }}
                 />
               </Grid>
 
               {/* Documents Section */}
-              <Grid item xs={12} sx={{ mt: 1 }}>
-                <Typography variant="subtitle2" color="textSecondary">
+              <Grid item xs={12} sx={{ mt: 3 }}>
+                <Typography
+                  variant="h6"
+                  sx={{ fontWeight: 500, mb: 2, color: "text.primary" }}
+                >
                   Documents
                 </Typography>
               </Grid>
 
-              {/* Challan Dates */}
               <Grid container spacing={2}>
                 {[
                   "challan",
@@ -2335,114 +2651,160 @@ const ProjectionDataGrid = () => {
                   "result",
                   "other_documents",
                 ].map((docType) => {
-                  const fileType = selectedFiles[docType]?.type || "";
-                  const fileSizeMB = selectedFiles[docType]
-                    ? (selectedFiles[docType].size / (1024 * 1024)).toFixed(2)
-                    : null;
+                  const isChallan = docType === "challan";
+                  const files = isChallan
+                    ? selectedFiles[docType] || []
+                    : selectedFiles[docType]
+                    ? [selectedFiles[docType]]
+                    : [];
 
                   return (
                     <Grid item xs={12} sm={6} key={docType}>
                       <Box
                         sx={{
-                          border: "1px solid #eee",
-                          borderRadius: 1,
+                          border: "1px solid #e5e7eb",
+                          borderRadius: 2,
                           p: 2,
-                          position: "relative",
+                          bgcolor: "white",
+                          boxShadow: "0 1px 3px rgba(0, 0, 0, 0.05)",
+                          transition: "box-shadow 0.2s ease",
+                          "&:hover": {
+                            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
+                          },
                         }}
                       >
-                        {/* Document Type Label */}
-                        <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                        <Typography
+                          variant="subtitle1"
+                          sx={{ mb: 1.5, fontWeight: 500 }}
+                        >
                           {docType.replace(/_/g, " ").toUpperCase()}
                         </Typography>
 
-                        {/* Existing File Display */}
-                        {editRow?.[docType] && !selectedFiles[docType] && (
-                          <Box
-                            sx={{
-                              display: "flex",
-                              alignItems: "center",
-                              // mb: 1,
-                            }}
-                          >
-                            <Tooltip title="View document">
-                              <IconButton
-                                href={editRow[docType]}
-                                target="_blank"
-                                color="primary"
-                                size="large"
-                              >
-                                {IoMdEye(
-                                  editRow[docType].includes("pdf")
-                                    ? "application/pdf"
-                                    : "image/jpeg"
-                                )}
-                              </IconButton>
-                            </Tooltip>
-                            <Typography variant="body2" sx={{ flex: 1 }}>
-                              Current File
-                            </Typography>
-                          </Box>
-                        )}
+                        {/* --- Existing challan files --- */}
+                        {isChallan &&
+                          editRow?.challan_files?.length > 0 &&
+                          files.length === 0 && (
+                            <Box sx={{ mb: 2 }}>
+                              {editRow.challan_files.map((fileObj) => (
+                                <Box
+                                  key={fileObj.id}
+                                  sx={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 1.5,
+                                    mb: 1,
+                                    p: 1,
+                                    borderRadius: 1,
+                                    bgcolor: "#f3f4f6",
+                                  }}
+                                >
+                                  <Tooltip title="View document">
+                                    <IconButton
+                                      href={fileObj.file}
+                                      target="_blank"
+                                      color="primary"
+                                      size="small"
+                                    >
+                                      <IoMdEye />
+                                    </IconButton>
+                                  </Tooltip>
+                                  <Typography
+                                    variant="body2"
+                                    noWrap
+                                    sx={{ color: "text.secondary" }}
+                                  >
+                                    {fileObj.file.split("/").pop()}
+                                  </Typography>
+                                </Box>
+                              ))}
+                            </Box>
+                          )}
 
-                        {/* Selected File Display */}
-                        {selectedFiles[docType] && (
-                          <Box
-                            sx={{
-                              display: "flex",
-                              alignItems: "center",
-                              gap: 1,
-                              mb: 1,
-                              p: 1,
-                              backgroundColor: "#f5f5f5",
-                              borderRadius: 1,
-                            }}
-                          >
-                            <Box sx={{ color: "primary.main" }}>
+                        {/* --- Existing single file display --- */}
+                        {!isChallan &&
+                          editRow?.[docType] &&
+                          files.length === 0 && (
+                            <Box
+                              sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 1.5,
+                                mb: 2,
+                                p: 1,
+                                borderRadius: 1,
+                                bgcolor: "#f3f4f6",
+                              }}
+                            >
+                              <Tooltip title="View document">
+                                <IconButton
+                                  href={editRow[docType]}
+                                  target="_blank"
+                                  color="primary"
+                                  size="small"
+                                >
+                                  <IoMdEye />
+                                </IconButton>
+                              </Tooltip>
+                              <Typography
+                                variant="body2"
+                                sx={{ color: "text.secondary" }}
+                              >
+                                Current File
+                              </Typography>
+                            </Box>
+                          )}
+
+                        {/* --- Selected Files Display --- */}
+                        {files.map((file, idx) => {
+                          const fileType = file?.type || "";
+                          const fileSizeMB = file
+                            ? (file.size / (1024 * 1024)).toFixed(2)
+                            : null;
+
+                          return (
+                            <Box
+                              key={idx}
+                              sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 1.5,
+                                mb: 1,
+                                p: 1.5,
+                                backgroundColor: "#f3f4f6",
+                                borderRadius: 1,
+                              }}
+                            >
                               <CheckCircleIcon
                                 color="success"
                                 fontSize="small"
                               />
-                            </Box>
-                            <Box sx={{ flex: 1 }}>
-                              <Typography variant="body2" noWrap>
-                                {selectedFiles[docType].name}
-                              </Typography>
-                              <Typography
-                                variant="caption"
-                                color="text.secondary"
+                              <Box sx={{ flex: 1 }}>
+                                <Typography
+                                  variant="body2"
+                                  noWrap
+                                  sx={{ fontWeight: 500 }}
+                                >
+                                  {file.name}
+                                </Typography>
+                                <Typography
+                                  variant="caption"
+                                  color="text.secondary"
+                                >
+                                  {fileSizeMB} MB •{" "}
+                                  {fileType.split("/")[1]?.toUpperCase()}
+                                </Typography>
+                              </Box>
+                              <IconButton
+                                size="small"
+                                onClick={() => clearFileSelection(docType, idx)}
                               >
-                                {fileSizeMB} MB •{" "}
-                                {fileType.split("/")[1]?.toUpperCase()}
-                              </Typography>
+                                <IoMdCloseCircle size={20} color="#ef4444" />
+                              </IconButton>
                             </Box>
-                            <IconButton
-                              size="small"
-                              onClick={() => clearFileSelection(docType)}
-                            >
-                              <IoMdCloseCircle size={20} color="red" />
-                            </IconButton>
-                          </Box>
-                        )}
+                          );
+                        })}
 
-                        {/* File Error */}
-                        {fileErrors[docType] && (
-                          <Box
-                            sx={{
-                              display: "flex",
-                              alignItems: "center",
-                              gap: 1,
-                              color: "error.main",
-                              mt: 1,
-                            }}
-                          >
-                            <ErrorOutlineIcon fontSize="small" />
-                            <Typography variant="caption">
-                              {fileErrors[docType]}
-                            </Typography>
-                          </Box>
-                        )}
-
-                        {/* File Upload */}
+                        {/* Upload */}
                         <label htmlFor={`upload-${docType}`}>
                           <Button
                             component="span"
@@ -2450,18 +2812,25 @@ const ProjectionDataGrid = () => {
                             color="primary"
                             startIcon={<CloudUploadIcon />}
                             fullWidth
-                            sx={{ mt: 1 }}
+                            sx={{
+                              mt: 1.5,
+                              borderRadius: 1,
+                              textTransform: "none",
+                              fontWeight: 500,
+                              py: 1,
+                            }}
                           >
-                            {editRow?.[docType] ? "Replace" : "Upload"}
-                            <input
-                              id={`upload-${docType}`}
-                              type="file"
-                              name={docType}
-                              onChange={(e) => handleFileChange(e, docType)}
-                              accept=".pdf,.jpg,.jpeg,.png"
-                              hidden
-                            />
+                            {isChallan ? "Add Challan Files" : "Upload File"}
                           </Button>
+                          <input
+                            id={`upload-${docType}`}
+                            type="file"
+                            name={docType}
+                            onChange={(e) => handleFileChange(e, docType)}
+                            accept=".pdf,.jpg,.jpeg,.png"
+                            hidden
+                            multiple={isChallan}
+                          />
                         </label>
                       </Box>
                     </Grid>
@@ -2470,12 +2839,20 @@ const ProjectionDataGrid = () => {
               </Grid>
             </Grid>
           </DialogContent>
-          <DialogActions sx={{ p: 2 }}>
+          <DialogActions
+            sx={{ p: 2, bgcolor: "#f9fafb", justifyContent: "flex-end" }}
+          >
             <Button
               onClick={() => setIsEditModalOpen(false)}
               variant="outlined"
               color="error"
-              sx={{ minWidth: 100 }}
+              sx={{
+                minWidth: 100,
+                borderRadius: 1,
+                textTransform: "none",
+                fontWeight: 500,
+                mr: 1,
+              }}
             >
               Cancel
             </Button>
@@ -2483,7 +2860,12 @@ const ProjectionDataGrid = () => {
               onClick={handleFormSubmit}
               variant="contained"
               color="primary"
-              sx={{ minWidth: 100 }}
+              sx={{
+                minWidth: 100,
+                borderRadius: 1,
+                textTransform: "none",
+                fontWeight: 500,
+              }}
             >
               Save
             </Button>
@@ -2497,18 +2879,64 @@ const ProjectionDataGrid = () => {
           maxWidth="md"
           fullWidth
         >
-          <DialogTitle>View {documentType} Document</DialogTitle>
+          <DialogTitle>
+            View {documentType} Document{fileUrls.length > 1 ? "s" : ""}
+          </DialogTitle>
           <DialogContent>
-            {fileUrl ? (
-              <img
-                src={fileUrl}
-                title="Document Viewer"
-                width="100%"
-                height="100%"
-                frameBorder="0"
-              ></img>
+            {fileUrls.length > 0 ? (
+              <Box sx={{ textAlign: "center" }}>
+                {isImage(fileUrls[currentFileIndex]) ? (
+                  <img
+                    src={fileUrls[currentFileIndex]}
+                    alt={`Document ${currentFileIndex + 1}`}
+                    style={{
+                      width: "100%",
+                      maxHeight: "500px",
+                      objectFit: "contain",
+                    }}
+                  />
+                ) : isPDF(fileUrls[currentFileIndex]) ? (
+                  <iframe
+                    src={fileUrls[currentFileIndex]}
+                    title={`Document ${currentFileIndex + 1}`}
+                    width="100%"
+                    height="500px"
+                    style={{ border: "none" }}
+                  />
+                ) : (
+                  <Typography>Unsupported file format</Typography>
+                )}
+                {fileUrls.length > 1 && (
+                  <Box
+                    sx={{
+                      mt: 2,
+                      display: "flex",
+                      justifyContent: "center",
+                      gap: 2,
+                    }}
+                  >
+                    <Button
+                      disabled={currentFileIndex === 0}
+                      onClick={() => setCurrentFileIndex((prev) => prev - 1)}
+                      variant="outlined"
+                    >
+                      Previous
+                    </Button>
+                    <Typography>
+                      File {currentFileIndex + 1} of {fileUrls.length}
+                    </Typography>
+                    <Button
+                      disabled={currentFileIndex === fileUrls.length - 1}
+                      onClick={() => setCurrentFileIndex((prev) => prev + 1)}
+                      variant="outlined"
+                    >
+                      Next
+                    </Button>
+                  </Box>
+                )}
+              </Box>
             ) : (
-              <p>Loading...</p>
+              <Typography>Loading...</Typography>
             )}
           </DialogContent>
           <DialogActions>

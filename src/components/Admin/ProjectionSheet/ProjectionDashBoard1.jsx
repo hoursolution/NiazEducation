@@ -5,30 +5,31 @@ import {
   GridToolbarColumnsButton,
   GridToolbarContainer,
   GridToolbarDensitySelector,
-  GridToolbarFilterButton,
 } from "@mui/x-data-grid";
 import {
-  Button,
   TextField,
   MenuItem,
   Select,
   FormControl,
-  InputLabel,
   Box,
+  InputLabel,
   Typography,
   CircularProgress,
+  Button,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
-import { borderRadius, padding, styled, textAlign } from "@mui/system";
+import { styled } from "@mui/system";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import ErrorIcon from "@mui/icons-material/Error";
 import InfoIcon from "@mui/icons-material/Info";
 import WarningIcon from "@mui/icons-material/Warning";
 import { ThumbUp, Visibility } from "@mui/icons-material";
 
-const BASE_URL = "https://zeenbackend-production.up.railway.app";
 // const BASE_URL = "http://127.0.0.1:8000";
-// --- Glass Lavender + Midnight Mode ---
+const BASE_URL =
+  "https://niazeducationscholarshipsbackend-production.up.railway.app";
+
+// --- Modern Color Palette ---
 const primaryColor = "#312E81"; // Indigo-900 for nav
 const secondaryColor = "#A78BFA"; // Light violet
 const accentColor = "#8B5CF6"; // Purple-500 for buttons
@@ -57,80 +58,122 @@ const CustomToolbar = () => {
 };
 
 // Custom styled DataGrid component
-const StyledDataGrid = styled(DataGrid)({
-  border: `1px solid ${cardBg}`, // Subtle border
-  borderRadius: "8px", // Rounded corners for the whole table
-  overflow: "hidden", // Ensures rounded corners are visible
+const StyledDataGrid = styled(DataGrid)(({ theme }) => ({
+  border: `1px solid rgba(229, 231, 235, 0.5)`, // Subtle, translucent border
+  borderRadius: "12px", // Softer, modern rounded corners
+  overflow: "hidden", // Ensures clean rounded edges
+  backgroundColor: "rgba(255, 255, 255, 0.95)", // Light glassmorphism background
+  boxShadow: "0 4px 20px rgba(0, 0, 0, 0.08)", // Soft shadow for depth
+  transition: "box-shadow 0.3s ease, transform 0.2s ease", // Smooth transitions
+  "&:hover": {
+    boxShadow: "0 6px 24px rgba(0, 0, 0, 0.12)", // Enhanced shadow on hover
+    transform: "translateY(-2px)", // Subtle lift effect
+  },
 
   "& .MuiDataGrid-columnHeaders": {
-    backgroundColor: headerBg, // Darker header background
-    color: textColor, // White text for headers
-    fontSize: "13px",
-    textTransform: "uppercase", // More modern look
-    fontWeight: "bold",
-    borderBottom: `1px solid ${accentColor}`, // Accent line below headers
+    background: `linear-gradient(180deg, ${headerBg}, rgba(243, 244, 246, 0.8))`, // Gradient header
+    color: textColor,
+    fontSize: "14px", // Slightly larger for readability
+    fontWeight: 600,
+    textTransform: "uppercase",
+    borderBottom: `2px solid ${accentColor}`, // Bolder accent line
+    padding: "8px 0", // Balanced padding
   },
+
   "& .MuiDataGrid-columnHeader": {
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
-    borderLeft: `1px solid #aaa`, // Subtle border between headers
+    borderLeft: `1px solid rgba(229, 231, 235, 0.5)`, // Softer border
     textAlign: "center",
     whiteSpace: "normal",
+    transition: "background-color 0.2s ease",
     "&:first-of-type": {
-      // Remove left border for the first header
       borderLeft: "none",
     },
+    "&:hover": {
+      backgroundColor: "rgba(124, 58, 237, 0.05)", // Subtle hover effect
+    },
   },
+
   "& .MuiDataGrid-columnHeaderTitle": {
     whiteSpace: "normal",
-    lineHeight: 1.2,
+    lineHeight: 1.3,
     width: "100%",
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
     textAlign: "center",
+    fontWeight: 400,
+    letterSpacing: "0.02em", // Slight letter spacing for elegance
   },
+
   "& .MuiDataGrid-cell": {
-    borderLeft: `1px solid #aaa`, // Subtle border between cells
+    borderLeft: `1px solid rgba(229, 231, 235, 0.5)`, // Consistent soft border
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
     textAlign: "center",
     whiteSpace: "normal",
     wordWrap: "break-word",
-    lineHeight: 1.4,
-    padding: "6px",
-    fontSize: "12px",
-    color: textColor, // Default cell text color
+    lineHeight: 1.5,
+    padding: "10px 8px", // Increased padding for comfort
+    fontSize: "13px", // Slightly larger text
+    color: textColor,
+    transition: "background-color 0.2s ease",
     "&:first-of-type": {
-      // Remove left border for the first cell in a row
       borderLeft: "none",
     },
+    "&:hover": {
+      backgroundColor: "rgba(124, 58, 237, 0.05)", // Subtle cell hover
+    },
   },
+
   "& .MuiDataGrid-row": {
-    backgroundColor: cardBg, // Dark background for rows
+    backgroundColor: cardBg,
+    borderBottom: `1px solid rgba(229, 231, 235, 0.3)`, // Subtle row divider
+    transition: "background-color 0.3s ease, transform 0.2s ease",
     "&:nth-of-type(odd)": {
-      backgroundColor: "rgba(255, 255, 255, 0.65)", // Slightly different shade for odd rows (zebra striping)
+      backgroundColor: "rgba(249, 250, 251, 0.85)", // Softer zebra striping
     },
     "&:hover": {
-      backgroundColor: "rgba(59, 130, 246, 0.15)", // Accent color on hover
+      backgroundColor: "rgba(124, 58, 237, 0.1)", // Vibrant hover effect
+      transform: "translateY(-1px)", // Slight lift on row hover
     },
   },
+
   "& .MuiDataGrid-footerContainer": {
-    backgroundColor: headerBg, // Match header background for footer
+    background: `linear-gradient(180deg, rgba(243, 244, 246, 0.8), ${headerBg})`, // Matching gradient
     color: textColor,
     borderTop: `1px solid ${accentColor}`,
-    borderRadius: "0 0 8px 8px", // Match table border radius
+    borderRadius: "0 0 12px 12px",
+    padding: "8px",
   },
-  "& .MuiTablePagination-root": {
-    color: textColor, // Pagination text color
-  },
-  "& .MuiSvgIcon-root": {
-    color: textColor, // Pagination icons color
-  },
-});
 
+  "& .MuiTablePagination-root": {
+    color: textColor,
+    fontSize: "13px",
+    fontWeight: 500,
+  },
+
+  "& .MuiSvgIcon-root": {
+    color: textColor,
+    transition: "color 0.2s ease",
+    "&:hover": {
+      color: accentColor, // Accent color on icon hover
+    },
+  },
+
+  // Improve accessibility
+  "& .MuiDataGrid-cell:focus": {
+    outline: `2px solid ${accentColor}`,
+    outlineOffset: "-2px",
+  },
+  "& .MuiDataGrid-columnHeader:focus-within": {
+    outline: `2px solid ${accentColor}`,
+    outlineOffset: "-2px",
+  },
+}));
 const StyledButton = styled(Button)(({ theme }) => ({
   fontSize: "10px",
   // margin: "2px 4px",
@@ -149,31 +192,20 @@ const ProjectionDashboard1 = () => {
   const [error, setError] = useState(null);
   const [searchText, setSearchText] = useState("");
   const [filterByStatus, setFilterByStatus] = useState("");
-  const [filterBySemester, setFilterBySemester] = useState("");
-  const [paginationModel, setPaginationModel] = useState({
-    page: 0,
-    pageSize: 10,
-  });
+
   const navigate = useNavigate();
 
-  const BASE_URL =
-    "https://niazeducationscholarshipsbackend-production.up.railway.app";
-
-  // Fetch students with error handling
+  // Fetch all students at once
   const fetchStudents = useCallback(async () => {
     try {
       setLoading(true);
-      setError(null);
-
       const response = await axios.get(
         `${BASE_URL}/api/student-projection-data/`
       );
 
-      const rawData = response.data.results;
-
-      console.log(rawData);
-      const processedData = rawData.flatMap((student) => {
-        return student.applications.map((app) => {
+      const rawData = response.data.results || response.data; // works with or without pagination
+      const processedData = rawData.flatMap((student) =>
+        student.applications.map((app) => {
           const proj = app.projection || {};
           return {
             id: `${student.id}-${app.id}`,
@@ -188,59 +220,41 @@ const ProjectionDashboard1 = () => {
             percentage: proj.percentage || "",
             status: proj.status || "Pending",
             dueDate: proj.challan_due_date
-              ? new Date(proj.challan_due_date).toLocaleDateString("en-GB", {
-                  day: "numeric",
-                  month: "numeric",
-                  year: "numeric",
-                })
+              ? new Date(proj.challan_due_date).toLocaleDateString("en-GB")
               : "",
             program: app.program_interested_in || "N/A",
             rawApplicationId: app.id,
           };
-        });
-      });
-
-      const sorted = processedData.sort(
-        (a, b) => a.rawApplicationId - b.rawApplicationId
+        })
       );
 
-      setStudents(sorted);
-      setFilteredStudents(sorted);
+      setStudents(processedData);
+      setFilteredStudents(processedData);
     } catch (error) {
       console.error("Error fetching students:", error);
-      setError("Failed to load student data. Please try again later.");
+      setError("Failed to load student data.");
     } finally {
       setLoading(false);
     }
   }, []);
 
-  // Filter logic
-  const filterStudents = useCallback(() => {
-    let filtered = [...students];
-
-    if (searchText) {
-      filtered = filtered.filter((student) =>
-        student.fullName?.toLowerCase().includes(searchText.toLowerCase())
-      );
-    }
-
-    if (filterByStatus) {
-      filtered = filtered.filter(
-        (student) => student.status === filterByStatus
-      );
-    }
-
-    setFilteredStudents(filtered);
-  }, [searchText, filterByStatus, students]);
-
-  // Effect hooks
   useEffect(() => {
     fetchStudents();
-  }, [fetchStudents]);
+  }, []);
 
+  // Filters
   useEffect(() => {
-    filterStudents();
-  }, [filterStudents]);
+    let filtered = [...students];
+    if (searchText) {
+      filtered = filtered.filter((s) =>
+        s.fullName?.toLowerCase().includes(searchText.toLowerCase())
+      );
+    }
+    if (filterByStatus) {
+      filtered = filtered.filter((s) => s.status === filterByStatus);
+    }
+    setFilteredStudents(filtered);
+  }, [searchText, filterByStatus, students]);
 
   const handleViewProjection = (studentId) => {
     navigate(`/Admin/students/${studentId}/projections`);
@@ -250,8 +264,7 @@ const ProjectionDashboard1 = () => {
     {
       field: "seq_no",
       headerName: "S.No",
-      flex: 1,
-      minWidth: 50,
+      width: 70,
       headerAlign: "center",
       align: "center",
       valueGetter: (params) => filteredStudents.indexOf(params.row) + 1,
@@ -259,77 +272,57 @@ const ProjectionDashboard1 = () => {
     {
       field: "fullName",
       headerName: "Student Name",
-      flex: 1,
-      minWidth: 150,
       headerAlign: "center",
       align: "center",
+      minWidth: 150,
+      flex: 1,
     },
     {
       field: "sponsor",
       headerName: "Sponsor Name",
-      flex: 1,
+      headerAlign: "center",
+      align: "center",
       minWidth: 150,
-      headerAlign: "center",
-      align: "center",
-    }, // Hide on small screens
-    {
-      field: "percentage",
-      headerName: "Sponsor Percentage",
       flex: 1,
-      minWidth: 100,
-      headerAlign: "center",
-      align: "center",
-      renderCell: (params) => {
-        const value = params.value;
-        const status = params.row.status;
-        return value !== null && value !== undefined && value !== "" ? (
-          value
-        ) : status === "Finished" ? (
-          "-"
-        ) : (
-          <span style={{ color: "red" }}>no date</span>
-        );
-      },
     },
+    // {
+    //   field: "percentage",
+    //   headerName: "Sponsor %",
+    //   minWidth: 100,
+    //   flex: 0.6,
+    //   renderCell: (params) =>
+    //     params.value ? (
+    //       params.value
+    //     ) : (
+    //       <Typography sx={{ color: "#EF4444", fontSize: "12px" }}>
+    //         No Data
+    //       </Typography>
+    //     ),
+    // },
     {
       field: "semester",
-      headerName: "Semester/Months",
-      flex: 1,
-      minWidth: 140,
+      headerName: "Month",
       headerAlign: "center",
       align: "center",
-      renderCell: (params) => {
-        const value = params.value;
-        const status = params.row.status;
-        return value !== null && value !== undefined && value !== "" ? (
-          value
-        ) : status === "Finished" ? (
-          "-"
-        ) : (
-          <span style={{ color: "red" }}>no data</span>
-        );
-      },
+      minWidth: 120,
+      flex: 0.6,
     },
     {
       field: "amount",
-      headerName: "Current Total Amount",
-      flex: 1,
+      headerName: "Total Amount",
       minWidth: 120,
+      flex: 0.8,
       headerAlign: "center",
       align: "center",
-      renderCell: (params) => {
-        const value = params.value;
-        const status = params.row.status;
-        return value !== null && value !== undefined && value !== "" ? (
-          parseFloat(value).toLocaleString()
-        ) : status === "Finished" ? (
-          "-"
+      renderCell: (params) =>
+        params.value ? (
+          parseFloat(params.value).toLocaleString()
         ) : (
-          <span style={{ color: "red" }}>no data</span>
-        );
-      },
+          <Typography sx={{ color: "#EF4444", fontSize: "12px" }}>
+            No Data
+          </Typography>
+        ),
     },
-
     {
       field: "Status",
       headerName: "Fee Status",
@@ -405,23 +398,12 @@ const ProjectionDashboard1 = () => {
     },
     {
       field: "dueDate",
-      headerName: "Challan Due Date",
-      flex: 1,
-      minWidth: 100,
+      headerName: "Due Date",
+      minWidth: 120,
+      flex: 0.6,
       headerAlign: "center",
       align: "center",
-      renderCell: (params) => {
-        const value = params.value;
-        const status = params.row.status;
-        return value !== null && value !== undefined && value !== "" ? (
-          value
-        ) : status === "Finished" ? (
-          "-"
-        ) : (
-          <span style={{ color: "red" }}>no date</span>
-        );
-      },
-    }, // Hide on small screens
+    },
     {
       field: "viewProjection",
       headerName: "View Projection",
@@ -456,70 +438,45 @@ const ProjectionDashboard1 = () => {
   ];
 
   return (
-    <Box sx={{ width: "100%", maxHeight: "100%", px: { xs: 3, sm: 1 } }}>
+    <Box
+      sx={{
+        width: "100%",
+        height: "90vh", // full screen height
+        display: "flex",
+        flexDirection: "column",
+        px: { xs: 2, sm: 3 },
+        py: 2,
+      }}
+    >
       {/* Filters */}
       <Box
         sx={{
           display: "flex",
-          flexDirection: { xs: "column", sm: "row" }, // Stack on small screens
+          flexDirection: { xs: "column", sm: "row" },
           justifyContent: "space-between",
-          alignItems: "center",
           gap: 2,
-          marginBottom: 3,
-          padding: 2,
-          backgroundColor: cardBg, // Card background for filters/button
-          borderRadius: "8px",
-          boxShadow: "0px 4px 15px rgba(0, 0, 0, 0.2)",
+          mb: 2,
+          p: 2,
+          backgroundColor: cardBg,
+          borderRadius: 2,
+          boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
         }}
       >
         <TextField
           label="Search by Name"
           value={searchText}
           onChange={(e) => setSearchText(e.target.value)}
-          variant="outlined" // Changed to outlined for consistency
+          variant="outlined"
           size="small"
-          sx={{
-            width: { xs: "100%", sm: "50%" },
-            "& .MuiOutlinedInput-root": {
-              color: textColor,
-              "& fieldset": { borderColor: textColor },
-              "&:hover fieldset": { borderColor: accentColor },
-              "&.Mui-focused fieldset": { borderColor: accentColor },
-            },
-            "& .MuiInputLabel-root": {
-              color: textColor,
-            },
-            "& .MuiInputLabel-root.Mui-focused": {
-              color: accentColor,
-            },
-          }}
+          fullWidth
+          sx={{ maxWidth: { sm: 300 } }}
         />
-
-        <FormControl
-          size="small"
-          variant="outlined" // Changed to outlined for consistency
-          sx={{
-            width: { xs: "100%", sm: "30%" },
-          }}
-        >
+        <FormControl size="small" sx={{ minWidth: 180 }}>
           <InputLabel>Status</InputLabel>
           <Select
             value={filterByStatus}
             onChange={(e) => setFilterByStatus(e.target.value)}
             label="Status"
-            sx={{
-              color: textColor,
-              "& .MuiOutlinedInput-notchedOutline": {
-                borderColor: textColor,
-              },
-              "&:hover .MuiOutlinedInput-notchedOutline": {
-                borderColor: accentColor,
-              },
-              "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-                borderColor: accentColor,
-              },
-              "& .MuiSvgIcon-root": { color: textColor }, // Dropdown arrow color
-            }}
           >
             <MenuItem value="">All</MenuItem>
             <MenuItem value="Paid">Paid</MenuItem>
@@ -534,51 +491,33 @@ const ProjectionDashboard1 = () => {
       {loading ? (
         <Box
           sx={{
-            height: "400px",
+            flex: 1,
             display: "flex",
-            flexDirection: "column",
             justifyContent: "center",
             alignItems: "center",
-            gap: 2,
           }}
         >
           <CircularProgress
-            size={40}
+            size={48}
             thickness={4}
-            style={{ color: accentColor }}
-          />{" "}
-          <span style={{ fontSize: "14px", color: "#333" }}>
-            Loading Projections...
-          </span>
+            sx={{ color: accentColor }}
+          />
         </Box>
       ) : error ? (
-        <Box textAlign="center" py={2} color="red">
-          {error}
+        <Box textAlign="center" py={3} color="#EF4444">
+          <Typography variant="h6">{error}</Typography>
         </Box>
       ) : (
-        <StyledDataGrid
-          rows={filteredStudents}
-          density="compact"
-          columns={columns}
-          pageSize={10}
-          loading={loading}
-          rowsPerPageOptions={[5, 10, 20]}
-          components={{
-            Toolbar: () => (
-              <CustomToolbar
-                selectedRows={filteredStudents}
-                // handleExport={handleExport}
-              />
-            ),
-          }}
-          rowHeight={null} // Let row height be dynamic
-          getRowHeight={() => "auto"}
-          sx={{
-            height: "420px", // Adjusted height for consistency
-            minWidth: "300px",
-            boxShadow: "0px 4px 20px rgba(0, 0, 0, 0.2)",
-          }}
-        />
+        <Box sx={{ flex: 1, overflow: "auto" }}>
+          <StyledDataGrid
+            rows={filteredStudents}
+            columns={columns}
+            density="compact"
+            // hideFooter
+            // autoHeight={false}
+            disableSelectionOnClick
+          />
+        </Box>
       )}
     </Box>
   );
