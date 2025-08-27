@@ -29,6 +29,8 @@ import {
   Tooltip,
   Badge,
   Dialog,
+  DialogContent,
+  DialogTitle,
 } from "@mui/material";
 import { api } from "./api";
 import {
@@ -45,9 +47,11 @@ import {
   Sort as SortIcon,
   Refresh as RefreshIcon,
 } from "@mui/icons-material";
+import EditIcon from "@mui/icons-material/Edit";
 import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline"; // For Add Donor button
 import AddDonor from "./AddDonor";
 import { useNavigate } from "react-router-dom";
+import DonorEdit from "./DonorEdit";
 
 // --- Glass Lavender + Midnight Mode ---
 const primaryColor = "#312E81"; // Indigo-900 for nav
@@ -79,6 +83,28 @@ export default function DonorList({ donors, selectedDonor, onSelectDonor }) {
   });
 
   const [addDonorDialogOpen, setAddDonorDialogOpen] = useState(false);
+
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [selectedDonorId, setSelectedDonorId] = useState(null);
+
+  // Fetch donors
+  useEffect(() => {
+    const fetchDonors = async () => {
+      try {
+        const res = await api.get("/donors/");
+        setDonors(res.data);
+      } catch (err) {
+        console.error("Error fetching donors:", err);
+      }
+    };
+    fetchDonors();
+  }, []);
+
+  // Open dialog for editing donor
+  const handleEditClick = (donorId) => {
+    setSelectedDonorId(donorId);
+    setEditDialogOpen(true);
+  };
 
   // Fetch dashboard data
   useEffect(() => {
@@ -336,8 +362,8 @@ export default function DonorList({ donors, selectedDonor, onSelectDonor }) {
   };
 
   return (
-    <Box sx={{ height: "100vh", overflowY: "auto" }}>
-      <Container maxWidth="lg" sx={{ py: 4, mt: 3 }}>
+    <Box sx={{ height: "100vh", width: "100%", overflowY: "auto", mt: 2 }}>
+      <Container maxWidth="xl" sx={{ py: 4, mt: 3 }}>
         {/* Funding Source Dashboard Section */}
         <Box>
           <Typography
@@ -717,9 +743,18 @@ export default function DonorList({ donors, selectedDonor, onSelectDonor }) {
                             py: 0.5,
                             fontSize: "0.8rem",
                             textTransform: "none",
+                            mr: 1,
                           }}
                         >
                           Plan
+                        </Button>
+                        <Button
+                          variant="outlined"
+                          size="small"
+                          startIcon={<EditIcon />}
+                          onClick={() => handleEditClick(donor.id)}
+                        >
+                          Edit
                         </Button>
                         <Button
                           variant="outlined"
@@ -824,6 +859,18 @@ export default function DonorList({ donors, selectedDonor, onSelectDonor }) {
         }}
       >
         <AddDonor onClose={() => setAddDonorDialogOpen(false)} />
+      </Dialog>
+
+      {/* Dialog for editing donor */}
+      <Dialog
+        open={editDialogOpen}
+        onClose={() => setEditDialogOpen(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogContent>
+          {selectedDonorId && <DonorEdit donorId={selectedDonorId} />}
+        </DialogContent>
       </Dialog>
     </Box>
   );

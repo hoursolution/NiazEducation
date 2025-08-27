@@ -58,6 +58,8 @@ export default function PaymentForm({
             <MenuItem value="Credit Card">Credit Card</MenuItem>
             <MenuItem value="Zelle">Zelle</MenuItem>
             <MenuItem value="Interac e-transfer">Interac e-transfer</MenuItem>
+            <MenuItem value="STC">STC</MenuItem>
+            <MenuItem value="Other">Other</MenuItem>
           </Select>
         </FormControl>
         <TextField

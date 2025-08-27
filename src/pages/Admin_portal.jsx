@@ -124,7 +124,7 @@ const Admin_portal = () => {
             display: "flex",
             flexDirection: "column",
             minHeight: "calc(100vh - 64px)", // space for navbar
-            paddingTop: "64px",
+            paddingTop: "40px",
             alignItems: "center",
             justifyContent: "center",
             width: "100%",

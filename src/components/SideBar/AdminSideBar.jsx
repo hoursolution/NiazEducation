@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import {
   Drawer,
   List,
@@ -20,14 +20,21 @@ import interview from "../../assets/interview.png";
 import logout from "../../assets/logout2.png";
 import { useNavigate } from "react-router-dom";
 
-export function SidebarOne({ isOpen, onClose, handleMenuItemClick }) {
+export function SidebarOne({
+  isOpen,
+  onClose,
+  handleMenuItemClick,
+  selectedMenuItem,
+}) {
   const navigate = useNavigate();
-  const [selectedMenuItem, setSelectedMenuItem] = useState("");
 
-  const sidebarBg = "#209be3"; // Mint to soft blueberry
+  const sidebarBg = "#209be3";
   const hoverBg = "rgba(0, 0, 0, 0.20)";
   const activeBg = "rgba(0, 0, 0, 0.40)";
-  const textColor = "white"; // Deep indigo for contrast
+  const textColor = "white";
+
+  const drawerWidthOpen = 198;
+  const drawerWidthClosed = 60;
 
   const drawerPaperStyle = {
     background: sidebarBg,
@@ -35,10 +42,14 @@ export function SidebarOne({ isOpen, onClose, handleMenuItemClick }) {
     WebkitBackdropFilter: "blur(12px)",
     color: textColor,
     borderRight: "none",
-    boxShadow: "4px 0 6px rgba(0, 0, 0, 0.1)",
     width: 198,
-    // border: `2px solid ${borderColor}`,
+    boxShadow: "4px 0 6px rgba(0, 0, 0, 0.1)",
+    width: isOpen ? drawerWidthOpen : drawerWidthClosed,
+    height: "100vh", // Explicitly set to viewport height
     overflowX: "hidden",
+    overflowY: "hidden", // Disable vertical scrolling
+    transition: "width 0.3s ease",
+    boxSizing: "border-box",
   };
 
   const menuItems = [
@@ -73,12 +84,6 @@ export function SidebarOne({ isOpen, onClose, handleMenuItemClick }) {
       path: "selectDonor",
       action: "SELECT DONOR",
     },
-    // {
-    //   text: "Select Mentor",
-    //   icon: mentor,
-    //   path: "selectMentor",
-    //   action: "SELECT MENTOR",
-    // },
     {
       text: "Projection Sheets",
       icon: projectionsheet,
@@ -89,7 +94,6 @@ export function SidebarOne({ isOpen, onClose, handleMenuItemClick }) {
   ];
 
   const handleItemClick = (item) => {
-    setSelectedMenuItem(item.text);
     handleMenuItemClick(item.action);
     navigate(item.path);
   };
@@ -101,29 +105,29 @@ export function SidebarOne({ isOpen, onClose, handleMenuItemClick }) {
       onClose={onClose}
       anchor="left"
       sx={{
-        "& .MuiDrawer-paper": {
-          ...drawerPaperStyle,
-        },
+        "& .MuiDrawer-paper": drawerPaperStyle,
       }}
     >
       <div className="flex flex-col h-full">
         {/* Logo */}
-        <motion.div
-          className="flex justify-center py-3 bg-white mx-2 my-2 rounded-lg"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.3 }}
-        >
-          <img
-            src={logo}
-            alt="NAIZ Logo"
-            className="h-24 object-contain cursor-pointer"
-            onClick={() => navigate("/admin")}
-          />
-        </motion.div>
+        {isOpen && (
+          <motion.div
+            className="flex justify-center py-2 bg-white mx-2 my-2 rounded-lg"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.3 }}
+          >
+            <img
+              src={logo}
+              alt="NAIZ Logo"
+              className="h-20 object-contain cursor-pointer" // Reduced logo height
+              onClick={() => navigate("/admin")}
+            />
+          </motion.div>
+        )}
 
         {/* Menu Items */}
-        <List className="flex-grow px-2">
+        <List className="flex-grow px-2" sx={{ overflow: "hidden" }}>
           {menuItems.map((item) => (
             <ListItem
               key={item.text}
@@ -134,18 +138,19 @@ export function SidebarOne({ isOpen, onClose, handleMenuItemClick }) {
               onClick={() => handleItemClick(item)}
               sx={{
                 borderRadius: "12px",
-                mb: 1,
-                px: 2.5,
-                py: 0.7,
+                mb: 0.5, // Reduced margin
+                px: isOpen ? 2.5 : 1.5,
+                py: 0.5, // Reduced padding
                 backgroundColor:
-                  selectedMenuItem === item.text ? activeBg : "transparent",
+                  selectedMenuItem === item.action ? activeBg : "transparent",
                 transition: "all 0.3s ease-in-out",
                 "&:hover": {
                   backgroundColor: hoverBg,
                 },
+                justifyContent: isOpen ? "flex-start" : "center",
               }}
             >
-              <ListItemIcon sx={{ minWidth: "36px" }}>
+              <ListItemIcon sx={{ minWidth: isOpen ? "36px" : "0" }}>
                 <motion.div
                   whileHover={{ scale: 1.1 }}
                   transition={{ duration: 0.2 }}
@@ -153,35 +158,37 @@ export function SidebarOne({ isOpen, onClose, handleMenuItemClick }) {
                   <img
                     src={item.icon}
                     alt={item.text}
-                    className="w-4"
+                    className={isOpen ? "w-4" : "w-6"}
                     style={{
                       filter:
-                        selectedMenuItem === item.text
+                        selectedMenuItem === item.action
                           ? "brightness(0) invert(1)"
                           : "none",
-                      opacity: selectedMenuItem === item.text ? 1 : 0.8,
+                      opacity: selectedMenuItem === item.action ? 1 : 0.8,
                     }}
                   />
                 </motion.div>
               </ListItemIcon>
-              <ListItemText
-                primary={item.text}
-                primaryTypographyProps={{
-                  sx: {
-                    fontSize: "12px",
-                    fontWeight: "500",
-                    color: textColor,
-                    letterSpacing: "0.2px",
-                  },
-                }}
-              />
+              {isOpen && (
+                <ListItemText
+                  primary={item.text}
+                  primaryTypographyProps={{
+                    sx: {
+                      fontSize: "12px",
+                      fontWeight: "500",
+                      color: textColor,
+                      letterSpacing: "0.2px",
+                    },
+                  }}
+                />
+              )}
             </ListItem>
           ))}
         </List>
 
         {/* Logout */}
         <motion.div
-          className="px-2 pb-4"
+          className="px-2 pb-2" // Reduced bottom padding
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.3 }}
@@ -189,40 +196,49 @@ export function SidebarOne({ isOpen, onClose, handleMenuItemClick }) {
           <Divider
             sx={{
               backgroundColor: "rgba(255,255,255,0.1)",
-              marginBottom: "12px",
+              marginBottom: "8px", // Reduced margin
             }}
           />
           <ListItem
             button
             onClick={() => {
-              console.log("Logging out...");
+              localStorage.removeItem("token");
               navigate("/login");
             }}
             sx={{
               borderRadius: "6px",
+              px: isOpen ? 2.5 : 1.5,
+              py: 0.5, // Reduced padding
+              justifyContent: isOpen ? "flex-start" : "center",
               "&:hover": {
                 backgroundColor: hoverBg,
               },
             }}
           >
-            <ListItemIcon sx={{ minWidth: "36px" }}>
+            <ListItemIcon sx={{ minWidth: isOpen ? "36px" : "0" }}>
               <motion.div
                 whileHover={{ rotate: 5 }}
                 transition={{ duration: 0.2 }}
               >
-                <img src={logout} alt="logout" className="w-3" />
+                <img
+                  src={logout}
+                  alt="logout"
+                  className={isOpen ? "w-3" : "w-5"}
+                />
               </motion.div>
             </ListItemIcon>
-            <ListItemText
-              primary="Logout"
-              primaryTypographyProps={{
-                sx: {
-                  fontSize: "14px",
-                  fontWeight: "600",
-                  color: textColor,
-                },
-              }}
-            />
+            {isOpen && (
+              <ListItemText
+                primary="Logout"
+                primaryTypographyProps={{
+                  sx: {
+                    fontSize: "14px",
+                    fontWeight: "600",
+                    color: textColor,
+                  },
+                }}
+              />
+            )}
           </ListItem>
         </motion.div>
       </div>

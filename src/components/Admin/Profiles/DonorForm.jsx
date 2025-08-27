@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import {
   TextField,
@@ -9,12 +9,20 @@ import {
   Container,
 } from "@mui/material";
 
-const DonorForm = ({ onSubmit }) => {
+const DonorForm = ({ onSubmit, initialValues = null }) => {
   const {
     register,
     handleSubmit,
     formState: { errors },
+    reset,
   } = useForm();
+
+  // ✅ Reset form with initial values if provided (edit mode)
+  useEffect(() => {
+    if (initialValues) {
+      reset(initialValues);
+    }
+  }, [initialValues, reset]);
 
   const onSubmitHandler = (data) => {
     onSubmit(data);
@@ -24,7 +32,7 @@ const DonorForm = ({ onSubmit }) => {
     <Container maxWidth="sm" sx={{ marginTop: 2 }}>
       <Paper elevation={3} style={{ padding: 20, marginBottom: 20 }}>
         <Typography variant="h4" align="center" gutterBottom>
-          CREATE DONOR
+          {initialValues ? "EDIT DONOR" : "CREATE DONOR"}
         </Typography>
         <form onSubmit={handleSubmit(onSubmitHandler)}>
           <Grid container spacing={2}>
@@ -34,7 +42,7 @@ const DonorForm = ({ onSubmit }) => {
                 label="Name"
                 variant="outlined"
                 fullWidth
-                error={errors.donor_name ? true : false}
+                error={!!errors.donor_name}
                 helperText={
                   errors.donor_name ? "Name is required" : "Password = name123"
                 }
@@ -50,7 +58,7 @@ const DonorForm = ({ onSubmit }) => {
                 label="CNIC"
                 variant="outlined"
                 fullWidth
-                error={errors.donor_cnic ? true : false}
+                error={!!errors.donor_cnic}
                 helperText={
                   errors.donor_cnic
                     ? "Invalid CNIC (Should be exactly 13 digits)"
@@ -69,7 +77,7 @@ const DonorForm = ({ onSubmit }) => {
                 variant="outlined"
                 type="number"
                 fullWidth
-                error={errors.donor_contact ? true : false}
+                error={!!errors.donor_contact}
                 helperText={
                   errors.donor_contact
                     ? "Invalid contact number (At least 11 digits)"
@@ -83,7 +91,7 @@ const DonorForm = ({ onSubmit }) => {
                 label="City"
                 variant="outlined"
                 fullWidth
-                error={errors.donor_city ? true : false}
+                error={!!errors.donor_city}
               />
             </Grid>
             <Grid item xs={12}>
@@ -94,7 +102,7 @@ const DonorForm = ({ onSubmit }) => {
                 label="Email"
                 variant="outlined"
                 fullWidth
-                error={errors.donor_email ? true : false}
+                error={!!errors.donor_email}
                 helperText={errors.donor_email ? "Invalid email address" : ""}
               />
             </Grid>
@@ -104,7 +112,7 @@ const DonorForm = ({ onSubmit }) => {
                 label="Country"
                 variant="outlined"
                 fullWidth
-                error={errors.donor_country ? true : false}
+                error={!!errors.donor_country}
                 helperText={errors.donor_country ? "Country is required" : ""}
               />
             </Grid>
@@ -115,7 +123,7 @@ const DonorForm = ({ onSubmit }) => {
                 color="primary"
                 fullWidth
               >
-                Submit
+                {initialValues ? "Update" : "Submit"}
               </Button>
             </Grid>
           </Grid>

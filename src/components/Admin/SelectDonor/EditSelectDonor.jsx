@@ -462,7 +462,9 @@ const EditSelectDonorForm = ({
                     {item.label}
                   </Typography>
                   <Typography variant="subtitle1" color={item.color}>
-                    Rs: {item.value}
+                    {item.label === "👨‍🎓 Students Sponsored by Donor"
+                      ? item.value
+                      : `Rs: ${item.value}`}
                   </Typography>
                   {/* <Typography variant="caption" color="textSecondary">
                     {item.description}

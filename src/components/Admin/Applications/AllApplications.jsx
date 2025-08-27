@@ -77,40 +77,57 @@ const CustomToolbar = ({ handleExportPDF, selectedRows }) => {
 };
 
 // Custom styled DataGrid component
-const StyledDataGrid = styled(DataGrid)({
-  border: `1px solid ${cardBg}`, // Subtle border
-  borderRadius: "8px", // Rounded corners for the whole table
-  overflow: "hidden", // Ensures rounded corners are visible
+// Custom styled DataGrid component
+const StyledDataGrid = styled(DataGrid)(({ theme }) => ({
+  border: `1px solid rgba(229, 231, 235, 0.5)`, // Subtle, translucent border
+  borderRadius: "12px", // Softer, modern rounded corners
+  overflow: "hidden", // Ensures clean rounded edges
+  backgroundColor: "rgba(255, 255, 255, 0.95)", // Light glassmorphism background
+  boxShadow: "0 4px 20px rgba(0, 0, 0, 0.08)", // Soft shadow for depth
+  transition: "box-shadow 0.3s ease, transform 0.2s ease", // Smooth transitions
+  "&:hover": {
+    boxShadow: "0 6px 24px rgba(0, 0, 0, 0.12)", // Enhanced shadow on hover
+    transform: "translateY(-2px)", // Subtle lift effect
+  },
 
   "& .MuiDataGrid-columnHeaders": {
-    backgroundColor: headerBg, // Darker header background
-    color: textColor, // White text for headers
-    fontSize: "13px",
-    textTransform: "uppercase", // More modern look
-    fontWeight: "bold",
-    borderBottom: `1px solid ${accentColor}`, // Accent line below headers
+    background: `linear-gradient(180deg, ${headerBg}, rgba(243, 244, 246, 0.8))`, // Gradient header
+    color: textColor,
+    fontSize: "14px", // Slightly larger for readability
+    fontWeight: 600,
+    textTransform: "uppercase",
+    borderBottom: `2px solid ${accentColor}`, // Bolder accent line
+    padding: "8px 0", // Balanced padding
   },
+
   "& .MuiDataGrid-columnHeader": {
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
-    borderLeft: `1px solid ${headerBg}`, // Subtle border between headers
+    borderLeft: `1px solid rgba(229, 231, 235, 0.5)`, // Softer border
     textAlign: "center",
     whiteSpace: "normal",
+    transition: "background-color 0.2s ease",
     "&:first-of-type": {
-      // Remove left border for the first header
       borderLeft: "none",
     },
+    "&:hover": {
+      backgroundColor: "rgba(124, 58, 237, 0.05)", // Subtle hover effect
+    },
   },
+
   "& .MuiDataGrid-columnHeaderTitle": {
     whiteSpace: "normal",
-    lineHeight: 1.2,
+    lineHeight: 1.3,
     width: "100%",
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
     textAlign: "center",
+    fontWeight: 400,
+    letterSpacing: "0.02em", // Slight letter spacing for elegance
   },
+
   "& .MuiDataGrid-cell": {
     borderLeft: `1px solid #aaa`, // Subtle border between cells
     display: "flex",
@@ -127,29 +144,56 @@ const StyledDataGrid = styled(DataGrid)({
       // Remove left border for the first cell in a row
       borderLeft: "none",
     },
+    "&:hover": {
+      backgroundColor: "rgba(124, 58, 237, 0.05)", // Subtle cell hover
+    },
   },
+
   "& .MuiDataGrid-row": {
-    backgroundColor: cardBg, // Dark background for rows
+    backgroundColor: cardBg,
+    borderBottom: `1px solid rgba(229, 231, 235, 0.3)`, // Subtle row divider
+    transition: "background-color 0.3s ease, transform 0.2s ease",
     "&:nth-of-type(odd)": {
-      backgroundColor: "rgba(255, 255, 255, 0.65)", // Slightly different shade for odd rows (zebra striping)
+      backgroundColor: "rgba(249, 250, 251, 0.85)", // Softer zebra striping
     },
     "&:hover": {
-      backgroundColor: "rgba(59, 130, 246, 0.15)", // Accent color on hover
+      backgroundColor: "rgba(124, 58, 237, 0.1)", // Vibrant hover effect
+      transform: "translateY(-1px)", // Slight lift on row hover
     },
   },
+
   "& .MuiDataGrid-footerContainer": {
-    backgroundColor: headerBg, // Match header background for footer
+    background: `linear-gradient(180deg, rgba(243, 244, 246, 0.8), ${headerBg})`, // Matching gradient
     color: textColor,
     borderTop: `1px solid ${accentColor}`,
-    borderRadius: "0 0 8px 8px", // Match table border radius
+    borderRadius: "0 0 12px 12px",
+    padding: "8px",
   },
+
   "& .MuiTablePagination-root": {
-    color: textColor, // Pagination text color
+    color: textColor,
+    fontSize: "13px",
+    fontWeight: 500,
   },
+
   "& .MuiSvgIcon-root": {
-    color: textColor, // Pagination icons color
+    color: textColor,
+    transition: "color 0.2s ease",
+    "&:hover": {
+      color: accentColor, // Accent color on icon hover
+    },
   },
-});
+
+  // Improve accessibility
+  "& .MuiDataGrid-cell:focus": {
+    outline: `2px solid ${accentColor}`,
+    outlineOffset: "-2px",
+  },
+  "& .MuiDataGrid-columnHeader:focus-within": {
+    outline: `2px solid ${accentColor}`,
+    outlineOffset: "-2px",
+  },
+}));
 
 const AllApplications = () => {
   const [applications, setApplications] = useState([]);
@@ -607,12 +651,16 @@ const AllApplications = () => {
               />
             ),
           }}
-          rowHeight={null}
-          getRowHeight={() => "auto"}
+          // rowHeight={null}
+          // getRowHeight={() => "auto"}
           sx={{
             height: "405px",
             minWidth: "300px",
             boxShadow: "0px 4px 20px rgba(0, 0, 0, 0.2)",
+            // 👇 make checkbox small
+            "& .MuiDataGrid-checkboxInput .MuiSvgIcon-root": {
+              fontSize: "12px", // default ~24px, shrink to 16px
+            },
           }}
           checkboxSelection
           disableRowSelectionOnClick

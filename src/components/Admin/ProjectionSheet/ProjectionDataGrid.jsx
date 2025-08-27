@@ -636,8 +636,15 @@ const ProjectionDataGrid = () => {
 
       Object.keys(selectedFiles).forEach((fileType) => {
         if (selectedFiles[fileType]) {
-          // If the file exists, append it
-          formData.append(fileType, selectedFiles[fileType]);
+          if (fileType === "challan") {
+            // ✅ append each challan file separately
+            selectedFiles[fileType].forEach((file) => {
+              formData.append("challan", file);
+            });
+          } else {
+            // ✅ single file fields (receipt, result, etc.)
+            formData.append(fileType, selectedFiles[fileType]);
+          }
         }
       });
       console.log(formData);
@@ -2617,10 +2624,28 @@ const ProjectionDataGrid = () => {
               <Grid item xs={12} sm={6} md={3}>
                 <TextField
                   size="small"
-                  label="Due Date"
+                  label="Challan Due Date"
                   name="challan_due_date"
                   type="date"
                   value={editRow?.challan_due_date || ""}
+                  InputLabelProps={{ shrink: true }}
+                  fullWidth
+                  onChange={handleEditChange}
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      borderRadius: 1,
+                      bgcolor: "white",
+                    },
+                  }}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6} md={3}>
+                <TextField
+                  size="small"
+                  label="Payment Date"
+                  name="challan_payment_date"
+                  type="date"
+                  value={editRow?.challan_payment_date || ""}
                   InputLabelProps={{ shrink: true }}
                   fullWidth
                   onChange={handleEditChange}
