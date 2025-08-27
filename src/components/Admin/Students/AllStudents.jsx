@@ -493,6 +493,7 @@ const AllStudents = () => {
             alignItems: "center",
             gap: 2,
             marginBottom: 3,
+            marginTop: 3,
             padding: 2,
             backgroundColor: cardBg, // Card background for filters/button
             borderRadius: "8px",

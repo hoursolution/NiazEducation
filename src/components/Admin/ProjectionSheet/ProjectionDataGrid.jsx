@@ -1670,6 +1670,7 @@ const ProjectionDataGrid = () => {
             gap: 2,
             padding: "5px",
             marginBottom: "20px",
+            marginTop: 3,
           }}
         >
           {/* Student info*/}
