@@ -69,6 +69,7 @@ export default function SubscriptionForm({
           >
             <MenuItem value="one-time">One-Time</MenuItem>
             <MenuItem value="monthly">Monthly</MenuItem>
+            <MenuItem value="quarterly">Quarterly</MenuItem>
             <MenuItem value="6-months">Every 6 Months</MenuItem>
             <MenuItem value="yearly">Yearly</MenuItem>
           </Select>
