@@ -38,6 +38,18 @@ const DonorForm = ({ onSubmit, initialValues = null }) => {
           <Grid container spacing={2}>
             <Grid item xs={12} sm={6}>
               <TextField
+                {...register("username", { required: true })}
+                label="User Name"
+                variant="outlined"
+                fullWidth
+                defaultValue={initialValues?.donor_username_value || ""}
+                error={!!errors.username}
+                helperText={errors.username ? "Username is required" : ""}
+              />
+            </Grid>
+
+            <Grid item xs={12} sm={6}>
+              <TextField
                 {...register("donor_name", { required: true })}
                 label="Name"
                 variant="outlined"
@@ -81,7 +93,7 @@ const DonorForm = ({ onSubmit, initialValues = null }) => {
                 helperText={
                   errors.donor_contact
                     ? "Invalid contact number (At least 11 digits)"
-                    : "Will be considered as Donor username"
+                    : ""
                 }
               />
             </Grid>

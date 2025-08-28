@@ -653,6 +653,7 @@ export default function DonorList({ donors, selectedDonor, onSelectDonor }) {
                       { label: "Contact" },
                       { label: "CNIC" },
                       { label: "Country" },
+                      { key: "username", label: "User Name" },
                       { label: "Actions", align: "right" },
                     ].map((column, index) => (
                       <TableCell
@@ -728,6 +729,9 @@ export default function DonorList({ donors, selectedDonor, onSelectDonor }) {
                             py: 0.5,
                           }}
                         />
+                      </TableCell>
+                      <TableCell sx={{ py: 1, fontSize: "0.85rem" }}>
+                        {donor.username}
                       </TableCell>
                       <TableCell align="right" sx={{ py: 1 }}>
                         <Button
