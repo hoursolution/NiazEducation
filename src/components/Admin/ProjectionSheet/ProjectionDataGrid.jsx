@@ -213,9 +213,9 @@ const ProjectionDataGrid = () => {
 
   const navigate = useNavigate();
 
-  // const BASE_URL = "http://127.0.0.1:8000";
-  const BASE_URL =
-    "https://niazeducationscholarshipsbackend-production.up.railway.app";
+  const BASE_URL = "http://127.0.0.1:8000";
+  // const BASE_URL =
+  //   "https://niazeducationscholarshipsbackend-production.up.railway.app";
 
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({
@@ -251,6 +251,13 @@ const ProjectionDataGrid = () => {
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState("success");
   const [showSupportForm, setShowSupportForm] = useState(false);
+  const documentLabels = {
+    challan: "Challan / Invoice (School or Shops → Student)",
+    payment_receipt: "Donor Payment Proof (Donor → Student)",
+    receipt: "Student Fee Receipt (Student → School/Shops)",
+    result: "Student Academic Result",
+    other_documents: "Additional Supporting Documents",
+  };
 
   const [filePreviews, setFilePreviews] = useState({
     challan: null,
@@ -590,6 +597,14 @@ const ProjectionDataGrid = () => {
   // State
   const [fileUrls, setFileUrls] = useState([]);
   const [currentFileIndex, setCurrentFileIndex] = useState(0);
+  // New state for tracking deleted files
+  const [deletedFiles, setDeletedFiles] = useState({
+    challan: [],
+    receipt: false,
+    payment_receipt: false,
+    result: false,
+    other_documents: false,
+  });
 
   // Helpers
   const isImage = (url) => /\.(jpg|jpeg|png|gif|bmp|webp)$/i.test(url);
@@ -618,8 +633,8 @@ const ProjectionDataGrid = () => {
       }
 
       const formData = new FormData();
-      // Only append fields that have changed or are required
-      // Append non-file fields from editRow
+
+      // ✅ Append non-file fields from editRow
       for (const key in editRow) {
         if (
           ![
@@ -634,20 +649,32 @@ const ProjectionDataGrid = () => {
         }
       }
 
+      // ✅ Append newly selected files
       Object.keys(selectedFiles).forEach((fileType) => {
         if (selectedFiles[fileType]) {
           if (fileType === "challan") {
-            // ✅ append each challan file separately
             selectedFiles[fileType].forEach((file) => {
               formData.append("challan", file);
             });
           } else {
-            // ✅ single file fields (receipt, result, etc.)
             formData.append(fileType, selectedFiles[fileType]);
           }
         }
       });
-      console.log(formData);
+
+      // ✅ Append deleted files info
+      Object.keys(deletedFiles).forEach((key) => {
+        if (Array.isArray(deletedFiles[key]) && deletedFiles[key].length > 0) {
+          // For challan (multiple files) send each id
+          deletedFiles[key].forEach((id) =>
+            formData.append("deleted_challan_files", id)
+          );
+        } else if (deletedFiles[key] === true) {
+          // For single file fields (receipt, result, etc.)
+          formData.append(`delete_${key}`, true);
+        }
+      });
+
       const response = await axios.patch(
         `${BASE_URL}/api/projections/${editRow.id}/update/`,
         formData,
@@ -665,9 +692,19 @@ const ProjectionDataGrid = () => {
             row.id === editRow.id ? { ...row, ...editRow } : row
           )
         );
-        // Refresh the table after a successful submission
+
+        // ✅ Refresh the table after successful save
         await fetchStudentProjections();
+
+        // Reset modal + deletedFiles state
         setIsEditModalOpen(false);
+        setDeletedFiles({
+          challan: [],
+          receipt: false,
+          payment_receipt: false,
+          result: false,
+          other_documents: false,
+        });
       }
     } catch (error) {
       console.error("Error updating projection:", error);
@@ -1024,11 +1061,34 @@ const ProjectionDataGrid = () => {
         </Typography>
       ),
     },
+
+    {
+      field: "payment_receipt",
+      headerName: "Transfer Receipt ",
+      width: 80,
+      renderCell: (params) =>
+        params.row.payment_receipt ? (
+          <Tooltip title="View Receipt">
+            <IconButton
+              color="success"
+              onClick={() => handleViewDocument(params.row, "payment_receipt")}
+            >
+              <ReceiptLongIcon />
+            </IconButton>
+          </Tooltip>
+        ) : (
+          <Tooltip title="Not Uploaded">
+            <Typography variant="body2" color="error">
+              <ErrorOutlineIcon />
+            </Typography>
+          </Tooltip>
+        ),
+    },
     {
       field: "receipt",
-      headerName: "Tranfer Receipt ",
+      headerName: "Fee/Invoice Receipt ",
       flex: 1,
-      minWidth: 80,
+      minWidth: 90,
       headerAlign: "center",
       align: "center",
       renderCell: (params) =>
@@ -1093,28 +1153,6 @@ const ProjectionDataGrid = () => {
               </Typography>
             </Box> */}
           </Box>
-        ),
-    },
-    {
-      field: "payment_receipt",
-      headerName: "payment Receipt ",
-      width: 80,
-      renderCell: (params) =>
-        params.row.payment_receipt ? (
-          <Tooltip title="View Receipt">
-            <IconButton
-              color="success"
-              onClick={() => handleViewDocument(params.row, "payment_receipt")}
-            >
-              <ReceiptLongIcon />
-            </IconButton>
-          </Tooltip>
-        ) : (
-          <Tooltip title="Not Uploaded">
-            <Typography variant="body2" color="error">
-              <ErrorOutlineIcon />
-            </Typography>
-          </Tooltip>
         ),
     },
 
@@ -2703,7 +2741,7 @@ const ProjectionDataGrid = () => {
                           variant="subtitle1"
                           sx={{ mb: 1.5, fontWeight: 500 }}
                         >
-                          {docType.replace(/_/g, " ").toUpperCase()}
+                          {documentLabels[docType]}
                         </Typography>
 
                         {/* --- Existing challan files --- */}
@@ -2741,6 +2779,30 @@ const ProjectionDataGrid = () => {
                                   >
                                     {fileObj.file.split("/").pop()}
                                   </Typography>
+                                  <IconButton
+                                    size="small"
+                                    onClick={() => {
+                                      // 1. Mark file for deletion
+                                      setDeletedFiles((prev) => ({
+                                        ...prev,
+                                        challan: [...prev.challan, fileObj.id],
+                                      }));
+
+                                      // 2. Immediately hide from UI
+                                      setEditRow((prev) => ({
+                                        ...prev,
+                                        challan_files:
+                                          prev.challan_files.filter(
+                                            (f) => f.id !== fileObj.id
+                                          ),
+                                      }));
+                                    }}
+                                  >
+                                    <IoMdCloseCircle
+                                      size={20}
+                                      color="#ef4444"
+                                    />
+                                  </IconButton>
                                 </Box>
                               ))}
                             </Box>
@@ -2777,6 +2839,24 @@ const ProjectionDataGrid = () => {
                               >
                                 Current File
                               </Typography>
+                              <IconButton
+                                size="small"
+                                onClick={() => {
+                                  // 1. Mark for deletion
+                                  setDeletedFiles((prev) => ({
+                                    ...prev,
+                                    [docType]: true,
+                                  }));
+
+                                  // 2. Immediately hide from UI
+                                  setEditRow((prev) => ({
+                                    ...prev,
+                                    [docType]: null,
+                                  }));
+                                }}
+                              >
+                                <IoMdCloseCircle size={20} color="#ef4444" />
+                              </IconButton>
                             </Box>
                           )}
 
