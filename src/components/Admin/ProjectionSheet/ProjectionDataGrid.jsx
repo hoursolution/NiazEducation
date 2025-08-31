@@ -213,9 +213,9 @@ const ProjectionDataGrid = () => {
 
   const navigate = useNavigate();
 
-  const BASE_URL = "http://127.0.0.1:8000";
-  // const BASE_URL =
-  //   "https://niazeducationscholarshipsbackend-production.up.railway.app";
+  // const BASE_URL = "http://127.0.0.1:8000";
+  const BASE_URL =
+    "https://niazeducationscholarshipsbackend-production.up.railway.app";
 
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({
