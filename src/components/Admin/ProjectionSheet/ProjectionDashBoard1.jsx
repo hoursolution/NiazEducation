@@ -513,6 +513,7 @@ const ProjectionDashboard1 = () => {
             rows={filteredStudents}
             columns={columns}
             density="compact"
+            disableRowSelectionOnClick
             // hideFooter
             // autoHeight={false}
             disableSelectionOnClick

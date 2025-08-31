@@ -2333,6 +2333,7 @@ const ProjectionDataGrid = () => {
             density="compact"
             pageSize={10}
             rowsPerPageOptions={[5, 10, 20]}
+            disableRowSelectionOnClick
             loading={loading}
             checkboxSelection // ✅ Show checkboxes
             onRowSelectionModelChange={handleRowSelection} // ✅ Track selection
