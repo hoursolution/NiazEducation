@@ -564,8 +564,8 @@ const ProjectionDataGrid = () => {
     const files = Array.from(e.target.files); // normalize to array
 
     setSelectedFiles((prev) => {
-      if (docType === "challan") {
-        // Multiple challans → merge with previous
+      if (["challan", "receipt", "payment_receipt"].includes(docType)) {
+        // Multiple files → merge with previous
         return {
           ...prev,
           [docType]: [...(prev[docType] || []), ...files],
@@ -584,24 +584,23 @@ const ProjectionDataGrid = () => {
 
   const clearFileSelection = (docType, index = null) => {
     setSelectedFiles((prev) => {
-      if (docType === "challan") {
+      if (["challan", "receipt", "payment_receipt"].includes(docType)) {
         const newFiles = [...(prev[docType] || [])];
-        newFiles.splice(index, 1); // remove only one challan file
+        newFiles.splice(index, 1); // remove only one file
         return { ...prev, [docType]: newFiles };
       } else {
         return { ...prev, [docType]: null }; // reset single file
       }
     });
   };
-
   // State
   const [fileUrls, setFileUrls] = useState([]);
   const [currentFileIndex, setCurrentFileIndex] = useState(0);
   // New state for tracking deleted files
   const [deletedFiles, setDeletedFiles] = useState({
     challan: [],
-    receipt: false,
-    payment_receipt: false,
+    receipt: [],
+    payment_receipt: [],
     result: false,
     other_documents: false,
   });
@@ -652,11 +651,13 @@ const ProjectionDataGrid = () => {
       // ✅ Append newly selected files
       Object.keys(selectedFiles).forEach((fileType) => {
         if (selectedFiles[fileType]) {
-          if (fileType === "challan") {
+          if (["challan", "receipt", "payment_receipt"].includes(fileType)) {
+            // multiple files
             selectedFiles[fileType].forEach((file) => {
-              formData.append("challan", file);
+              formData.append(fileType, file);
             });
           } else {
+            // single file
             formData.append(fileType, selectedFiles[fileType]);
           }
         }
@@ -665,12 +666,12 @@ const ProjectionDataGrid = () => {
       // ✅ Append deleted files info
       Object.keys(deletedFiles).forEach((key) => {
         if (Array.isArray(deletedFiles[key]) && deletedFiles[key].length > 0) {
-          // For challan (multiple files) send each id
+          // For multi-file fields (challan, receipt, payment_receipt)
           deletedFiles[key].forEach((id) =>
-            formData.append("deleted_challan_files", id)
+            formData.append(`deleted_${key}_files`, id)
           );
         } else if (deletedFiles[key] === true) {
-          // For single file fields (receipt, result, etc.)
+          // For single file fields (result, other_documents)
           formData.append(`delete_${key}`, true);
         }
       });
@@ -700,8 +701,8 @@ const ProjectionDataGrid = () => {
         setIsEditModalOpen(false);
         setDeletedFiles({
           challan: [],
-          receipt: false,
-          payment_receipt: false,
+          receipt: [],
+          payment_receipt: [],
           result: false,
           other_documents: false,
         });
@@ -754,12 +755,22 @@ const ProjectionDataGrid = () => {
       case "challan":
         url = row.challan; // Assuming `row.challan_document_url` holds the URL
         break;
-      case "receipt":
-        url = row.receipt; // Assuming `row.receipt_document_url` holds the URL
-        break;
-      case "payment_receipt":
-        url = row.payment_receipt; // Assuming `row.receipt_document_url` holds the URL
-        break;
+      case "receipt_files":
+        if (row.receipt_files && row.receipt_files.length > 0) {
+          const urls = row.receipt_files.map((f) => f.file); // 👈 extract just the file URLs
+          handleOpenModal(urls, documentType);
+        } else {
+          console.error("No receipt_files files found");
+        }
+        return;
+      case "payment_receipt_files":
+        if (row.payment_receipt_files && row.payment_receipt_files.length > 0) {
+          const urls = row.payment_receipt_files.map((f) => f.file); // 👈 extract just the file URLs
+          handleOpenModal(urls, documentType);
+        } else {
+          console.error("No payment_receipt_files files found");
+        }
+        return;
       case "result":
         url = row.result; // Assuming `row.result_document_url` holds the URL
         break;
@@ -1063,97 +1074,66 @@ const ProjectionDataGrid = () => {
     },
 
     {
-      field: "payment_receipt",
-      headerName: "Transfer Receipt ",
-      width: 80,
-      renderCell: (params) =>
-        params.row.payment_receipt ? (
-          <Tooltip title="View Receipt">
-            <IconButton
-              color="success"
-              onClick={() => handleViewDocument(params.row, "payment_receipt")}
-            >
-              <ReceiptLongIcon />
-            </IconButton>
-          </Tooltip>
-        ) : (
-          <Tooltip title="Not Uploaded">
-            <Typography variant="body2" color="error">
-              <ErrorOutlineIcon />
-            </Typography>
-          </Tooltip>
-        ),
-    },
-    {
-      field: "receipt",
-      headerName: "Fee/Invoice Receipt ",
+      field: "receiptInfo",
+      headerName: "Receipts",
       flex: 1,
-      minWidth: 90,
+      minWidth: 130,
       headerAlign: "center",
       align: "center",
-      renderCell: (params) =>
-        params.row.receipt ? (
-          <Box sx={{ display: "flex" }}>
-            <Box>
-              <Tooltip title="View Receipt">
-                <IconButton
-                  color="success"
-                  onClick={() => handleViewDocument(params.row, "receipt")}
-                >
-                  <ReceiptLongIcon sx={{ fontSize: "18px" }} />
-                </IconButton>
-              </Tooltip>
-            </Box>
-            {/* <Box
-              onClick={() => handleEdit(params.row)}
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                cursor: "pointer",
-                color: "#0376ab",
-                backgroundColor: "#aaa",
-                padding: "2px 4px ",
-                width: "90px",
-                borderRadius: "6px",
-                "&:hover": { textDecoration: "underline" },
-              }}
+      renderCell: (params) => (
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          {params.row.receipt_files && params.row.receipt_files.length > 0 ? (
+            <Tooltip
+              title={`View ${params.row.receipt_files.length} Receipt File(s)`}
             >
-              <Edit sx={{ mr: 0.5, fontSize: "16px" }} />
-              <Typography sx={{ fontWeight: 700, fontSize: "12px" }}>
-                Re-Upload
-              </Typography>
-            </Box> */}
-          </Box>
-        ) : (
-          <Box sx={{ display: "flex", gap: 1 }}>
-            <Box>
-              <Tooltip title="Not Uploaded">
-                <Typography variant="body2" color="error">
-                  <ErrorOutlineIcon sx={{ fontSize: "24px" }} />
-                </Typography>
-              </Tooltip>
-            </Box>
-            {/* <Box
-              onClick={() => handleEdit(params.row)}
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                cursor: "pointer",
-                color: "#0376ab",
-                backgroundColor: "#aaa",
-                padding: "2px 4px ",
-                width: "80px",
-                borderRadius: "6px",
-                "&:hover": { textDecoration: "underline" },
-              }}
+              <IconButton
+                color="success"
+                onClick={() => handleViewDocument(params.row, "receipt_files")}
+                size="small"
+              >
+                <ReceiptLongIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          ) : (
+            <Tooltip title="Not Uploaded">
+              <ErrorOutlineIcon fontSize="small" color="error" />
+            </Tooltip>
+          )}
+        </Box>
+      ),
+    },
+
+    {
+      field: "paymentReceiptInfo",
+      headerName: "Transfer Receipts",
+      flex: 1,
+      minWidth: 130,
+      headerAlign: "center",
+      align: "center",
+      renderCell: (params) => (
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          {params.row.payment_receipt_files &&
+          params.row.payment_receipt_files.length > 0 ? (
+            <Tooltip
+              title={`View ${params.row.payment_receipt_files.length} Transfer Receipt File(s)`}
             >
-              <Edit sx={{ mr: 0.5, fontSize: "16px" }} />
-              <Typography sx={{ fontWeight: 700, fontSize: "12px" }}>
-                Upload
-              </Typography>
-            </Box> */}
-          </Box>
-        ),
+              <IconButton
+                color="info"
+                onClick={() =>
+                  handleViewDocument(params.row, "payment_receipt_files")
+                }
+                size="small"
+              >
+                <DescriptionIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          ) : (
+            <Tooltip title="Not Uploaded">
+              <ErrorOutlineIcon fontSize="small" color="error" />
+            </Tooltip>
+          )}
+        </Box>
+      ),
     },
 
     {
@@ -2716,8 +2696,12 @@ const ProjectionDataGrid = () => {
                   "result",
                   "other_documents",
                 ].map((docType) => {
-                  const isChallan = docType === "challan";
-                  const files = isChallan
+                  const isMulti =
+                    docType === "challan" ||
+                    docType === "receipt" ||
+                    docType === "payment_receipt";
+
+                  const files = isMulti
                     ? selectedFiles[docType] || []
                     : selectedFiles[docType]
                     ? [selectedFiles[docType]]
@@ -2745,12 +2729,12 @@ const ProjectionDataGrid = () => {
                           {documentLabels[docType]}
                         </Typography>
 
-                        {/* --- Existing challan files --- */}
-                        {isChallan &&
-                          editRow?.challan_files?.length > 0 &&
+                        {/* --- Existing multi-file display (challan, receipt, payment_receipt) --- */}
+                        {isMulti &&
+                          editRow?.[`${docType}_files`]?.length > 0 &&
                           files.length === 0 && (
                             <Box sx={{ mb: 2 }}>
-                              {editRow.challan_files.map((fileObj) => (
+                              {editRow[`${docType}_files`].map((fileObj) => (
                                 <Box
                                   key={fileObj.id}
                                   sx={{
@@ -2786,16 +2770,18 @@ const ProjectionDataGrid = () => {
                                       // 1. Mark file for deletion
                                       setDeletedFiles((prev) => ({
                                         ...prev,
-                                        challan: [...prev.challan, fileObj.id],
+                                        [docType]: [
+                                          ...(prev[docType] || []),
+                                          fileObj.id,
+                                        ],
                                       }));
 
                                       // 2. Immediately hide from UI
                                       setEditRow((prev) => ({
                                         ...prev,
-                                        challan_files:
-                                          prev.challan_files.filter(
-                                            (f) => f.id !== fileObj.id
-                                          ),
+                                        [`${docType}_files`]: prev[
+                                          `${docType}_files`
+                                        ].filter((f) => f.id !== fileObj.id),
                                       }));
                                     }}
                                   >
@@ -2809,8 +2795,8 @@ const ProjectionDataGrid = () => {
                             </Box>
                           )}
 
-                        {/* --- Existing single file display --- */}
-                        {!isChallan &&
+                        {/* --- Existing single-file display (result, other_documents) --- */}
+                        {!isMulti &&
                           editRow?.[docType] &&
                           files.length === 0 && (
                             <Box
@@ -2927,7 +2913,9 @@ const ProjectionDataGrid = () => {
                               py: 1,
                             }}
                           >
-                            {isChallan ? "Add Challan Files" : "Upload File"}
+                            {isMulti
+                              ? `Add ${documentLabels[docType]} Files`
+                              : "Upload File"}
                           </Button>
                           <input
                             id={`upload-${docType}`}
@@ -2936,7 +2924,7 @@ const ProjectionDataGrid = () => {
                             onChange={(e) => handleFileChange(e, docType)}
                             accept=".pdf,.jpg,.jpeg,.png"
                             hidden
-                            multiple={isChallan}
+                            multiple={isMulti}
                           />
                         </label>
                       </Box>
