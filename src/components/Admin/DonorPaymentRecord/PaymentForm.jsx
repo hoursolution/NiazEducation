@@ -64,6 +64,19 @@ export default function PaymentForm({
         </FormControl>
         <TextField
           fullWidth
+          type="file"
+          sx={{ mt: 2 }}
+          inputProps={{ accept: ".jpg,.jpeg,.png,.pdf" }} // ✅ restrict formats
+          onChange={(e) =>
+            setPaymentForm({
+              ...paymentForm,
+              proof: e.target.files?.[0] || null,
+            })
+          }
+        />
+
+        <TextField
+          fullWidth
           label="Notes"
           sx={{ mt: 2 }}
           multiline

@@ -61,6 +61,7 @@ export default function PaymentScheduleTable({
             <TableCell>Notes</TableCell>
             <TableCell>Status</TableCell>
             <TableCell>Remaining</TableCell>
+            <TableCell>Proof</TableCell>
             <TableCell>Actions</TableCell>
           </TableRow>
         </TableHead>
@@ -92,6 +93,49 @@ export default function PaymentScheduleTable({
                   )}
                 </TableCell>
                 <TableCell>{remaining.toFixed(2)}</TableCell>
+                <TableCell>
+                  {s.payment && s.payment.proof ? (
+                    <div
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 4,
+                      }}
+                    >
+                      {/* ✅ Thumbnail if image */}
+                      {s.payment.proof.match(/\.(jpeg|jpg|png|gif)$/i) && (
+                        <img
+                          src={s.payment.proof}
+                          alt="proof"
+                          style={{
+                            width: 50,
+                            height: 50,
+                            objectFit: "cover",
+                            borderRadius: 4,
+                            border: "1px solid #ddd",
+                          }}
+                        />
+                      )}
+
+                      {/* ✅ Always show link */}
+                      <a
+                        href={s.payment.proof}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          color: "#1976d2",
+                          textDecoration: "underline",
+                          fontSize: 10,
+                        }}
+                      >
+                        View
+                      </a>
+                    </div>
+                  ) : (
+                    "-"
+                  )}
+                </TableCell>
+
                 <TableCell>
                   {!s.is_paid ? (
                     <Tooltip title="Pay Now">

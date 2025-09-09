@@ -146,6 +146,7 @@ export default function SubscriptionPage() {
     payment_date: "",
     payment_method: "Cash",
     notes: "",
+    proof: null, // ✅ new
   });
   const [editingPaymentId, setEditingPaymentId] = useState(null);
 
@@ -207,6 +208,7 @@ export default function SubscriptionPage() {
       payment_date: "",
       payment_method: "Cash",
       notes: "",
+      proof: null, // ✅ reset file
     });
     setPaymentFormOpen(true);
   };
@@ -219,6 +221,7 @@ export default function SubscriptionPage() {
         payment_date: res.data.payment_date,
         payment_method: res.data.payment_method,
         notes: res.data.notes,
+        proof: null, // ✅ no pre-filled file; let user replace
       });
       setSelectedScheduleId(scheduleId);
       setEditingPaymentId(paymentId);
@@ -230,21 +233,32 @@ export default function SubscriptionPage() {
 
   const handleSubmitPayment = async () => {
     try {
+      const formData = new FormData();
+      formData.append("schedule", selectedScheduleId);
+      formData.append("amount", paymentFormData.amount ?? "");
+      formData.append("payment_date", paymentFormData.payment_date ?? "");
+      formData.append("payment_method", paymentFormData.payment_method ?? "");
+      formData.append("notes", paymentFormData.notes ?? "");
+      if (paymentFormData.proof) {
+        formData.append("proof", paymentFormData.proof); // ✅ file
+      }
+
       if (editingPaymentId) {
-        await api.put(`/payments/${editingPaymentId}/`, {
-          ...paymentFormData,
-          schedule: selectedScheduleId,
+        // PATCH is safer so you don’t have to resend all fields
+        await api.patch(`/payments/${editingPaymentId}/`, formData, {
+          headers: { "Content-Type": "multipart/form-data" },
         });
         toast.success("Payment updated successfully!");
       } else {
-        await api.post("/payments/", {
-          ...paymentFormData,
-          schedule: selectedScheduleId,
+        await api.post("/payments/", formData, {
+          headers: { "Content-Type": "multipart/form-data" },
         });
         toast.success("Payment recorded successfully!");
       }
+
       loadAll();
-    } catch {
+    } catch (e) {
+      console.error(e);
       toast.error("Failed to save payment");
     } finally {
       setPaymentFormOpen(false);

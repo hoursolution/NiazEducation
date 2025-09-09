@@ -65,6 +65,7 @@ import { toast } from "react-toastify";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { IoMdCloseCircle, IoMdEye } from "react-icons/io";
+import YouTubeIcon from "@mui/icons-material/YouTube";
 
 // Custom GridToolbar with the "Projection" button
 const CustomToolbar = ({
@@ -238,6 +239,7 @@ const ProjectionDataGrid = () => {
     challan_date: "",
     challan_due_date: "",
     challan_payment_date: "",
+    youtube_links: "",
     comment: "",
     status: "NYD",
     challan: null,
@@ -896,6 +898,29 @@ const ProjectionDataGrid = () => {
       align: "center",
       valueFormatter: (params) =>
         parseFloat(parseFloat(params.value || 0).toFixed(0)).toLocaleString(),
+    },
+    {
+      field: "youtube_links",
+      headerName: "Video Proof",
+      flex: 1,
+      minWidth: 110,
+      headerAlign: "center",
+      align: "center",
+      renderCell: (params) => {
+        const url = params.value;
+        return url ? (
+          <a
+            href={url}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ color: "red", display: "flex", justifyContent: "center" }}
+          >
+            <YouTubeIcon sx={{ fontSize: 28, cursor: "pointer" }} />
+          </a>
+        ) : (
+          "-"
+        );
+      },
     },
     {
       field: "health_insurance_contribution",
@@ -2666,6 +2691,25 @@ const ProjectionDataGrid = () => {
                   name="challan_payment_date"
                   type="date"
                   value={editRow?.challan_payment_date || ""}
+                  InputLabelProps={{ shrink: true }}
+                  fullWidth
+                  onChange={handleEditChange}
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      borderRadius: 1,
+                      bgcolor: "white",
+                    },
+                  }}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6} md={6}>
+                <TextField
+                  size="small"
+                  label="Video Link for Proof"
+                  name="youtube_links" // ✅ match the field name
+                  type="url"
+                  placeholder="https://youtube.com/..."
+                  value={editRow?.youtube_links || ""}
                   InputLabelProps={{ shrink: true }}
                   fullWidth
                   onChange={handleEditChange}
