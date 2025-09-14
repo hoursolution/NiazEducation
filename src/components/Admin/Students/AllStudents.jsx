@@ -5,7 +5,15 @@ import {
   GridToolbarContainer,
   GridToolbarDensitySelector,
 } from "@mui/x-data-grid";
-import { Box, Button, colors, styled, TextField } from "@mui/material";
+import {
+  Box,
+  Button,
+  colors,
+  styled,
+  TextField,
+  Tooltip,
+  IconButton,
+} from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import ConfirmationDialog from "../Applications/ConfirmationDialog"; // Adjust import path as needed
 import styles from "../../Admin/Applications/AllApplication.module.css"; // Adjust path as needed
@@ -15,6 +23,10 @@ import EditIcon from "@mui/icons-material/Edit";
 import DeleteForeverIcon from "@mui/icons-material/DeleteForever";
 import CircularProgress from "@mui/material/CircularProgress";
 import Typography from "@mui/material/Typography";
+import DescriptionIcon from "@mui/icons-material/Description"; // Icon for Admission PDF
+import AssignmentIcon from "@mui/icons-material/Assignment"; // Icon for Student Initial Report
+import { generateAdmissionPDF } from "./generateAdmissionPDF";
+import { generateStudentInitialPDF } from "./Student_Initial_Report";
 
 const BASE_URL =
   "https://niazeducationscholarshipsbackend-production.up.railway.app";
@@ -375,23 +387,23 @@ const AllStudents = () => {
         );
       },
     },
-    {
-      field: "email",
-      headerName: "Email",
-      headerAlign: "center",
-      align: "center",
-      width: 200,
-      renderCell: (params) => {
-        const name = params.row?.email;
-        const isSelected = !!name;
+    // {
+    //   field: "email",
+    //   headerName: "Email",
+    //   headerAlign: "center",
+    //   align: "center",
+    //   width: 200,
+    //   renderCell: (params) => {
+    //     const name = params.row?.email;
+    //     const isSelected = !!name;
 
-        return (
-          <span style={{ color: isSelected ? "#000" : "red" }}>
-            {isSelected ? name : " "}
-          </span>
-        );
-      },
-    },
+    //     return (
+    //       <span style={{ color: isSelected ? "#000" : "red" }}>
+    //         {isSelected ? name : " "}
+    //       </span>
+    //     );
+    //   },
+    // },
     {
       field: "applications_count",
       headerName: "App Count",
@@ -399,6 +411,63 @@ const AllStudents = () => {
       headerAlign: "center",
       align: "center",
       valueGetter: (params) => params.row.applications?.length || 0,
+    },
+
+    {
+      field: "generateStudentInitialPDF",
+      headerName: "Student Initial Report",
+      minWidth: 140,
+      headerAlign: "center",
+      align: "center",
+      renderCell: (params) => {
+        const applicationId = params.row.id; // Pick first application
+
+        return (
+          <Tooltip title="Generate Student Initial Report">
+            <IconButton
+              size="small"
+              sx={{
+                backgroundColor: "#62E2F4",
+                color: "white",
+                "&:hover": {
+                  backgroundColor: "#white",
+                },
+              }}
+              onClick={() => generateStudentInitialPDF(applicationId)}
+            >
+              <AssignmentIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        );
+      },
+    },
+    {
+      field: "generateAdmissionPDF",
+      headerName: "Admission PDF",
+      minWidth: 140,
+      headerAlign: "center",
+      align: "center",
+      renderCell: (params) => {
+        const applicationId = params.row.id; // Pick first application
+
+        return (
+          <Tooltip title="Generate Admission PDF">
+            <IconButton
+              size="small"
+              sx={{
+                backgroundColor: "#29B912",
+                color: "white",
+                "&:hover": {
+                  backgroundColor: "white",
+                },
+              }}
+              onClick={() => generateAdmissionPDF(applicationId)}
+            >
+              <DescriptionIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        );
+      },
     },
     {
       field: "education_status",
