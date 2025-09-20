@@ -734,47 +734,67 @@ export default function DonorList({ donors, selectedDonor, onSelectDonor }) {
                         {donor.username}
                       </TableCell>
                       <TableCell align="right" sx={{ py: 1 }}>
-                        <Button
-                          variant="contained"
-                          onClick={() => onSelectDonor(donor.id)}
+                        <Box
                           sx={{
-                            backgroundColor: theme.palette.primary.main,
-                            "&:hover": {
-                              backgroundColor: theme.palette.primary.dark,
-                            },
-                            borderRadius: 1,
-                            px: 2,
-                            py: 0.5,
-                            fontSize: "0.8rem",
-                            textTransform: "none",
-                            mr: 1,
+                            display: "flex",
+                            justifyContent: "flex-end",
+                            gap: 1,
                           }}
                         >
-                          Plan
-                        </Button>
-                        <Button
-                          variant="outlined"
-                          size="small"
-                          startIcon={<EditIcon />}
-                          onClick={() => handleEditClick(donor.id)}
-                        >
-                          Edit
-                        </Button>
-                        <Button
-                          variant="outlined"
-                          color="error"
-                          onClick={() => handleDelete(donor.id)}
-                          sx={{
-                            borderRadius: 1,
-                            px: 1.5,
-                            py: 0.5,
-                            ml: 1,
-                            fontSize: "0.8rem",
-                            textTransform: "none",
-                          }}
-                        >
-                          Delete
-                        </Button>
+                          <Button
+                            variant="contained"
+                            size="small"
+                            onClick={() => onSelectDonor(donor.id)}
+                            sx={{
+                              backgroundColor: theme.palette.primary.main,
+                              "&:hover": {
+                                backgroundColor: theme.palette.primary.dark,
+                              },
+                              borderRadius: 2,
+                              px: 2,
+                              py: 0.5,
+                              fontSize: "0.8rem",
+                              textTransform: "none",
+                              minWidth: 70,
+                            }}
+                          >
+                            Plan
+                          </Button>
+
+                          <Button
+                            variant="outlined"
+                            size="small"
+                            startIcon={<EditIcon />}
+                            onClick={() => handleEditClick(donor.id)}
+                            sx={{
+                              borderRadius: 2,
+                              px: 2,
+                              py: 0.5,
+                              fontSize: "0.8rem",
+                              textTransform: "none",
+                              minWidth: 70,
+                            }}
+                          >
+                            Edit
+                          </Button>
+
+                          <Button
+                            variant="outlined"
+                            size="small"
+                            color="error"
+                            onClick={() => handleDelete(donor.id)}
+                            sx={{
+                              borderRadius: 2,
+                              px: 2,
+                              py: 0.5,
+                              fontSize: "0.8rem",
+                              textTransform: "none",
+                              minWidth: 70,
+                            }}
+                          >
+                            Delete
+                          </Button>
+                        </Box>
                       </TableCell>
                     </TableRow>
                   ))}

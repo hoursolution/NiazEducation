@@ -147,9 +147,9 @@ const AllVarification = () => {
   });
   const navigate = useNavigate();
 
-  const BASE_URL =
-    "https://niazeducationscholarshipsbackend-production.up.railway.app";
-  // const BASE_URL = "http://127.0.0.1:8000";
+  // const BASE_URL =
+  // "https://niazeducationscholarshipsbackend-production.up.railway.app";
+  const BASE_URL = "http://127.0.0.1:8000";
 
   useEffect(() => {
     fetch(`${BASE_URL}/api/verifications/`)
@@ -159,7 +159,7 @@ const AllVarification = () => {
         console.log(data);
         const grouped = {};
         data.forEach((item) => {
-          const key = `${item.application.name} ${item.application.last_name}`;
+          const key = `${item.application_name} ${item.application_last_name}`;
           if (!grouped[key]) {
             grouped[key] = [];
           }
@@ -169,9 +169,9 @@ const AllVarification = () => {
         // Process each group
         const groupedWithSortKey = Object.values(grouped).map((group) => {
           // Sort internally by application ID
-          group.sort((a, b) => a.application.id - b.application.id);
+          group.sort((a, b) => a.application_id - b.application_id);
           return {
-            sortKey: group[0].application.id, // use the first application ID as sort key
+            sortKey: group[0].application_id, // use the first application ID as sort key
             items: group,
           };
         });
@@ -185,7 +185,7 @@ const AllVarification = () => {
           group.items.forEach((item, index) => {
             const order = index + 1;
             const suffix = order === 1 ? "" : ` (${order})`;
-            const displayName = `${item.application.name} ${item.application.last_name}${suffix}`;
+            const displayName = `${item.application_name} ${item.application_last_name}${suffix}`;
             updatedData.push({
               ...item,
               displayNameWithOrder: displayName,

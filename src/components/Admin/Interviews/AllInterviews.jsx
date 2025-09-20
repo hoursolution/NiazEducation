@@ -157,7 +157,7 @@ const AllInterviews = () => {
 
   const BASE_URL =
     "https://niazeducationscholarshipsbackend-production.up.railway.app";
-  // const BASE_URL = "http://127.0.0.1:8000";/
+  // const BASE_URL = "http://127.0.0.1:8000";
 
   useEffect(() => {
     fetch(`${BASE_URL}/api/interviews/`)
@@ -167,7 +167,7 @@ const AllInterviews = () => {
         console.log(data);
         const grouped = {};
         data.forEach((item) => {
-          const key = `${item.application.name} ${item.application.last_name}`;
+          const key = `${item.application_name} ${item.application_last_name}`;
           if (!grouped[key]) {
             grouped[key] = [];
           }
@@ -177,9 +177,9 @@ const AllInterviews = () => {
         // Step 2: Map each group to include sortKey (first application ID)
         const groupedWithSortKey = Object.values(grouped).map((group) => {
           // Sort internally by application ID
-          group.sort((a, b) => a.application.id - b.application.id);
+          group.sort((a, b) => a.application_id - b.application_id);
           return {
-            sortKey: group[0].application.id, // use first app ID
+            sortKey: group[0].application_id, // use first app ID
             items: group,
           };
         });
@@ -193,7 +193,7 @@ const AllInterviews = () => {
           group.items.forEach((item, index) => {
             const order = index + 1;
             const suffix = order === 1 ? "" : ` (${order})`;
-            const displayName = `${item.application.name} ${item.application.last_name}${suffix}`;
+            const displayName = `${item.application_name} ${item.application_last_name}${suffix}`;
             updatedData.push({
               ...item,
               displayNameWithOrder: displayName,

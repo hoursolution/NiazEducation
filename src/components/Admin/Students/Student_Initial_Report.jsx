@@ -129,7 +129,7 @@ export const generateStudentInitialPDF = async (applicationId) => {
     // Family Background
     addHeading("Family Background:");
     addParagraph(
-      `${d.student_name} comes from a family facing financial struggles due to a parent’s disability. ${d.student_name}’s parent has ${d.disability_type}, which makes it difficult for the family to support themselves. This makes it even more important for ${d.student_name} to receive support with education and healthcare.`
+      `${d.student_name} comes from a family facing financial struggles due to a parent’s disability. ${d.student_name}’s parent has ${d.disability}, which makes it difficult for the family to support themselves. This makes it even more important for ${d.student_name} to receive support with education and healthcare.`
     );
     addParagraph(
       `Your support will give ${d.student_name} a better chance at a brighter future and help them become more independent. We will keep you updated on the student’s progress as they begin their educational journey.`
