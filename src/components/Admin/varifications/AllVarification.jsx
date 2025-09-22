@@ -150,7 +150,7 @@ const AllVarification = () => {
   const BASE_URL =
     "https://niazeducationscholarshipsbackend-production.up.railway.app";
   // const BASE_URL = "http://127.0.0.1:8000";
-
+  // comment
   useEffect(() => {
     fetch(`${BASE_URL}/api/verifications/`)
       .then((response) => response.json())
