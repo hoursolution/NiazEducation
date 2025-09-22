@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   Container,
   Grid,
@@ -44,6 +44,7 @@ const CreateSelectDonorForm = () => {
 
   const BASE_URL =
     "https://niazeducationscholarshipsbackend-production.up.railway.app";
+  // const BASE_URL = "http://127.0.0.1:8000";
 
   const [formData, setFormData] = useState({
     application: "",
@@ -108,67 +109,14 @@ const CreateSelectDonorForm = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [studentsRes, donorsRes, allSelectDonorsRes] = await Promise.all([
-          fetch(`${BASE_URL}/all-applications/`),
-          fetch(`${BASE_URL}/api/donor/`),
-          fetch(`${BASE_URL}/api/select-donor/`),
-        ]);
+        const res = await fetch(`${BASE_URL}/api/student-donor-init/`);
+        if (!res.ok) throw new Error("Failed to fetch data");
 
-        const [applications, donors, allSelectDonors] = await Promise.all([
-          studentsRes.json(),
-          donorsRes.json(),
-          allSelectDonorsRes.json(),
-        ]);
-
-        // Get assigned application IDs
-        const assignedApplicationIds = allSelectDonors.map(
-          (sd) => sd.application
-        );
-
-        // Filter out applications already assigned
-        const unassignedApplications = applications.filter(
-          (app) => !assignedApplicationIds.includes(app.id)
-        );
-
-        // Group applications by student full name
-        const grouped = {};
-        unassignedApplications.forEach((app) => {
-          const key = `${app.name} ${app.last_name}`;
-          if (!grouped[key]) {
-            grouped[key] = [];
-          }
-          grouped[key].push(app);
-        });
-
-        // Sort each group and assign display name
-        const groupedWithSortKey = Object.values(grouped).map((group) => {
-          group.sort((a, b) => a.id - b.id);
-          return {
-            sortKey: group[0].id,
-            items: group,
-          };
-        });
-
-        groupedWithSortKey.sort((a, b) => a.sortKey - b.sortKey);
-
-        const updatedData = [];
-        groupedWithSortKey.forEach((group) => {
-          group.items.forEach((app, index) => {
-            const order = index + 1;
-            const suffix = order === 1 ? "" : ` (${order})`;
-            const displayName = `${app.name} ${app.last_name}${suffix}`;
-            updatedData.push({
-              ...app,
-              displayNameWithOrder: displayName,
-            });
-          });
-        });
-
-        setStudents(updatedData);
-        setDonors(donors);
+        const data = await res.json();
+        setStudents(data.students);
+        setDonors(data.donors);
       } catch (err) {
         console.error("Error fetching data:", err);
-        // Optionally set an error state to display to the user
         setAlert({
           severity: "error",
           message: "Failed to load data. Please try again later.",

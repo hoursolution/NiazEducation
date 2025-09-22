@@ -164,7 +164,7 @@ const AllStudents = () => {
   };
   const refreshStudents = () => {
     setLoading(true);
-    fetch(`${BASE_URL}/students/`)
+    fetch(`${BASE_URL}/api/students-light/`)
       .then((response) => response.json())
       .then((data) => {
         setStudents(data);
@@ -180,7 +180,7 @@ const AllStudents = () => {
   // Fetch students
   useEffect(() => {
     setLoading(true);
-    fetch(`${BASE_URL}/students/`)
+    fetch(`${BASE_URL}/api/students-light/`)
       .then((response) => response.json())
       .then((data) => {
         setStudents(data);

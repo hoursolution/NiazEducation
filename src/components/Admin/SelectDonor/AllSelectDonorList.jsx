@@ -160,69 +160,37 @@ const AllSelectDonorList = () => {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const [donorResponse, selectDonorResponse, allApplicationsResponse] =
-        await Promise.all([
-          fetch(`${BASE_URL}/api/donor/`),
-          fetch(`${BASE_URL}/api/select-donor/`),
-          fetch(`${BASE_URL}/all-applications/`),
-        ]);
+      const [donorResponse, selectDonorResponse] = await Promise.all([
+        fetch(`${BASE_URL}/api/donor/`),
+        fetch(`${BASE_URL}/api/select-donor/`),
+      ]);
 
-      if (
-        !donorResponse.ok ||
-        !selectDonorResponse.ok ||
-        !allApplicationsResponse.ok
-      ) {
+      if (!donorResponse.ok || !selectDonorResponse.ok) {
         throw new Error("Failed to fetch data");
       }
 
-      const [donorData, selectDonorData, allApplications] = await Promise.all([
+      const [donorData, selectDonorData] = await Promise.all([
         donorResponse.json(),
         selectDonorResponse.json(),
-        allApplicationsResponse.json(),
       ]);
 
-      // Step 1: Build map from application ID → application object
-      const applicationMap = new Map();
-      allApplications.forEach((app) => {
-        applicationMap.set(app.id, app);
-      });
-
-      // Step 2: Group selectDonorData by student full name
+      // Group by student full name
       const grouped = {};
       selectDonorData.forEach((item) => {
-        const app = applicationMap.get(item.application);
-        if (!app) return; // Skip if not found
-
-        const key = `${app.name} ${app.last_name}`;
-        if (!grouped[key]) {
-          grouped[key] = [];
-        }
-
-        grouped[key].push({ ...item, applicationObject: app });
+        const key = `${item.student_name} ${item.student_last_name}`;
+        if (!grouped[key]) grouped[key] = [];
+        grouped[key].push(item);
       });
 
-      // Step 3: Sort each group by application ID and apply suffix
-      const groupedWithSortKey = Object.values(grouped).map((group) => {
-        group.sort((a, b) => a.applicationObject.id - b.applicationObject.id);
-        return {
-          sortKey: group[0].applicationObject.id,
-          items: group,
-        };
-      });
-
-      groupedWithSortKey.sort((a, b) => a.sortKey - b.sortKey);
-
-      // Step 4: Build final list
+      // Build final donor list with suffixes per student
       const updatedDonorList = [];
-      groupedWithSortKey.forEach((group) => {
-        group.items.forEach((item, index) => {
-          const app = item.applicationObject;
+      Object.values(grouped).forEach((group) => {
+        group.sort((a, b) => a.application - b.application); // sort by application id
+        group.forEach((item, index) => {
           const suffix = index === 0 ? "" : ` (${index + 1})`;
-          const displayName = `${app.name} ${app.last_name}${suffix}`;
-
           updatedDonorList.push({
             ...item,
-            displayNameWithOrder: displayName,
+            displayNameWithOrder: `${item.student_name} ${item.student_last_name}${suffix}`,
           });
         });
       });
@@ -231,10 +199,10 @@ const AllSelectDonorList = () => {
       setSelectDonorList(updatedDonorList);
       setFilteredDonorList(updatedDonorList);
       setError(null);
-      setLoading(false);
     } catch (err) {
       console.error("Error fetching data:", err);
       setError("Failed to load data. Please try again later.");
+    } finally {
       setLoading(false);
     }
   }, []);
@@ -328,16 +296,16 @@ const AllSelectDonorList = () => {
       valueGetter: (params) => params.row.displayNameWithOrder || "",
     },
     {
-      field: "donor",
+      field: "donor_name",
       headerName: "Donor",
       flex: 1,
       minWidth: 75,
       headerAlign: "center",
       align: "center",
       renderCell: (params) =>
-        params.row.donor ? (
+        params.row.donor_name ? (
           <Typography sx={{ fontSize: "12px", color: textColor }}>
-            {params.row?.donor?.donor_name}
+            {params.row.donor_name}
           </Typography>
         ) : (
           <Typography sx={{ fontSize: "12px", color: "#EF4444" }}>
@@ -345,6 +313,7 @@ const AllSelectDonorList = () => {
           </Typography>
         ),
     },
+
     {
       field: "selection_date",
       headerName: "Date Since Sponsorship Commenced",

@@ -81,108 +81,23 @@ const EditSelectDonorForm = ({
   useEffect(() => {
     const fetchData = async () => {
       try {
-        console.log(SelectDonorId);
         setLoading(true);
-        const [
-          selectDonorResponse,
-          allApplicationsResponse,
-          donorsResponse,
-          allSelectDonorsResponse,
-        ] = await Promise.all([
-          fetch(`${BASE_URL}/api/select-donor/${SelectDonorId}/`),
-          fetch(`${BASE_URL}/all-applications/`),
-          fetch(`${BASE_URL}/api/donor/`),
-          fetch(`${BASE_URL}/api/select-donor/`),
-        ]);
-
-        if (
-          !selectDonorResponse.ok ||
-          !allApplicationsResponse.ok ||
-          !donorsResponse.ok ||
-          !allSelectDonorsResponse.ok
-        ) {
-          throw new Error("Failed to fetch one or more resources");
-        }
-
-        const [selectDonorData, applications, donorsData, allSelectDonors] =
-          await Promise.all([
-            selectDonorResponse.json(),
-            allApplicationsResponse.json(),
-            donorsResponse.json(),
-            allSelectDonorsResponse.json(),
-          ]);
-        console.log(selectDonorData);
-        const assignedApplicationIds = allSelectDonors
-          .map((sd) => sd.application)
-          .filter((id) => id !== selectDonorData.application);
-
-        const unassignedApplications = applications.filter(
-          (app) => !assignedApplicationIds.includes(app.id)
+        const res = await fetch(
+          `${BASE_URL}/api/edit-select-donor/${SelectDonorId}/`
         );
+        if (!res.ok) throw new Error("Failed to fetch data");
 
-        // Include current selected application even if already assigned
-        const currentApplication = applications.find(
-          (app) => app.id === selectDonorData.application
-        );
-        if (
-          currentApplication &&
-          !unassignedApplications.some(
-            (app) => app.id === currentApplication.id
-          )
-        ) {
-          unassignedApplications.unshift(currentApplication);
-        }
+        const data = await res.json();
 
-        // Group by student name
-        const grouped = {};
-        unassignedApplications.forEach((app) => {
-          const key = `${app.name} ${app.last_name}`;
-          if (!grouped[key]) {
-            grouped[key] = [];
-          }
-          grouped[key].push(app);
+        setFormData({
+          ...data.formData, // <-- now contains all fields prefilled
+          trigger_projection: "No", // override if you always want No by default
         });
-
-        const groupedWithSortKey = Object.values(grouped).map((group) => {
-          group.sort((a, b) => a.id - b.id);
-          return {
-            sortKey: group[0].id,
-            items: group,
-          };
-        });
-
-        groupedWithSortKey.sort((a, b) => a.sortKey - b.sortKey);
-
-        const updatedData = [];
-        groupedWithSortKey.forEach((group) => {
-          let order = 1;
-          group.items.forEach((app) => {
-            let suffix = "";
-            if (app.id !== selectDonorData.application) {
-              order++;
-              suffix = ` (${order - 1})`;
-            }
-            const displayName =
-              app.id === selectDonorData.application
-                ? `${app.name} ${app.last_name}`
-                : `${app.name} ${app.last_name}${suffix}`;
-
-            updatedData.push({
-              ...app,
-              displayNameWithOrder: displayName,
-            });
-          });
-        });
-
-        setFormData((prevFormData) => ({
-          ...selectDonorData,
-          trigger_projection: "No", // Ensure this is set to No by default on load
-        }));
-        setStudents(updatedData); // 'students' here means 'applications' list
-        setDonors(donorsData);
-      } catch (error) {
-        console.error("Error during API calls:", error.message);
-        setError(error.message || "Something went wrong");
+        setStudents(data.students);
+        setDonors(data.donors);
+      } catch (err) {
+        console.error("Error fetching data:", err);
+        setError("Failed to load data");
       } finally {
         setLoading(false);
       }

@@ -49,9 +49,10 @@ const Reports = () => {
     const fetchApplications = async () => {
       try {
         const response = await axios.get(
-          "https://zeenbackend-production.up.railway.app/all-applications/"
+          "https://niazeducationscholarshipsbackend-production.up.railway.app/all-applicationss/"
         );
         setApplications(response.data);
+        console.log(response.data);
       } catch (error) {
         console.error("Error fetching applications:", error);
       } finally {
@@ -63,7 +64,6 @@ const Reports = () => {
 
   // / Define the columns for the DataGrid
   const columns = [
-    // { field: "id", headerName: "ID", width: 70 },
     {
       field: "name",
       headerName: "Name",
@@ -84,32 +84,30 @@ const Reports = () => {
     { field: "email", headerName: "Email", width: 200 },
     { field: "village", headerName: "Village", width: 150 },
     { field: "address", headerName: "Address", width: 200 },
+
+    // 🔹 corrected mappings
     {
-      field: "current_level_of_education",
-      headerName: "Current Level of Education",
+      field: "current_grade",
+      headerName: "Current Grade",
       width: 200,
     },
     {
-      field: "institution_interested_in",
-      headerName: "Institution Interested In",
+      field: "school_interested_in",
+      headerName: "School Interested In",
       width: 200,
     },
     {
-      field: "program",
-      headerName: "Program Interested In",
-      width: 250,
-      valueGetter: (params) => params.row.program_interested_in?.name || "N/A",
+      field: "grade_interested_in",
+      headerName: "Grade Interested In",
+      width: 200,
     },
+
     {
       field: "admission_fee_of_the_program",
       headerName: "Admission Fee",
       width: 150,
     },
-    {
-      field: "total_fee_of_the_program",
-      headerName: "Total Fee",
-      width: 150,
-    },
+    { field: "total_fee_of_the_program", headerName: "Total Fee", width: 150 },
     { field: "living_expenses", headerName: "Living Expenses", width: 150 },
     {
       field: "food_and_necessities_expenses",
@@ -121,65 +119,33 @@ const Reports = () => {
     {
       field: "expected_sponsorship_amount",
       headerName: "Expected Sponsorship Amount",
+      width: 200,
+    },
+
+    { field: "household_income", headerName: "Household Income", width: 180 },
+
+    { field: "status", headerName: "Status", width: 150 },
+
+    // ✅ fixed child photo (array of objects)
+    {
+      field: "child_photo",
+      headerName: "Child Picture",
       width: 150,
-    },
-    {
-      field: "total_members_of_household",
-      headerName: "Household Members",
-      width: 150,
-    },
-    { field: "members_earning", headerName: "Earning Members", width: 150 },
-    { field: "income_per_month", headerName: "Income Per Month", width: 150 },
-    { field: "expense_per_month", headerName: "Expense Per Month", width: 150 },
-    {
-      field: "description_of_household",
-      headerName: "Household Description",
-      width: 300,
-    },
-    {
-      field: "personal_statement",
-      headerName: "Personal Statement",
-      width: 400,
-    },
-    {
-      field: "status",
-      headerName: "Application Status",
-      width: 150,
-    },
-    {
-      field: "verification_required",
-      headerName: "Verification Required",
-      width: 150,
-      valueGetter: (params) =>
-        params.row.verification_required ? "Yes" : "No",
-    },
-    {
-      field: "degrees",
-      headerName: "Degrees",
-      width: 400,
-      valueGetter: (params) =>
-        params.row.degree
-          ?.map(
-            (degree) =>
-              `${degree.degree_name} (${degree.grade || "N/A"} - ${
-                degree.status || "N/A"
-              })`
-          )
-          .join("; ") || "No degrees",
-    },
-    {
-      field: "profile_picture",
-      headerName: "Profile Picture",
-      width: 300,
-      renderCell: (params) => (
-        <img
-          src={params.row.profile_picture}
-          alt="Profile"
-          style={{ width: 50, height: 50, borderRadius: "50%" }}
-        />
-      ),
+      renderCell: (params) => {
+        const file = params.row.child_photo?.[0]?.file;
+        return file ? (
+          <img
+            src={file}
+            alt="Profile"
+            style={{ width: 50, height: 50, borderRadius: "50%" }}
+          />
+        ) : (
+          "No Image"
+        );
+      },
     },
   ];
+
   // Prepare rows for the DataGrid
   const rows = applications.map((application) => ({
     ...application,
@@ -289,121 +255,3 @@ const Reports = () => {
 };
 
 export default Reports;
-// Define the columns for the DataGrid
-// const columns = [
-//   // { field: "id", headerName: "ID", width: 70 },
-//   {
-//     field: "name",
-//     headerName: "Name",
-//     width: 150,
-//     valueGetter: (params) =>
-//       `${params.row.name || ""} ${params.row.last_name || ""}`,
-//   },
-//   { field: "father_name", headerName: "Father Name", width: 150 },
-//   { field: "gender", headerName: "Gender", width: 100 },
-//   { field: "date_of_birth", headerName: "Date of Birth", width: 130 },
-//   { field: "age", headerName: "Age", width: 70 },
-//   { field: "country", headerName: "Country", width: 130 },
-//   { field: "province", headerName: "Province", width: 130 },
-//   { field: "city", headerName: "City", width: 130 },
-//   { field: "city_of_origin", headerName: "City of Origin", width: 150 },
-//   { field: "mobile_no", headerName: "Mobile No", width: 130 },
-//   { field: "cnic_or_b_form", headerName: "CNIC/B-Form", width: 150 },
-//   { field: "email", headerName: "Email", width: 200 },
-//   { field: "village", headerName: "Village", width: 150 },
-//   { field: "address", headerName: "Address", width: 200 },
-//   {
-//     field: "current_level_of_education",
-//     headerName: "Current Level of Education",
-//     width: 200,
-//   },
-//   {
-//     field: "institution_interested_in",
-//     headerName: "Institution Interested In",
-//     width: 200,
-//   },
-//   {
-//     field: "program",
-//     headerName: "Program Interested In",
-//     width: 250,
-//     valueGetter: (params) => params.row.program_interested_in?.name || "N/A",
-//   },
-//   {
-//     field: "admission_fee_of_the_program",
-//     headerName: "Admission Fee",
-//     width: 150,
-//   },
-//   {
-//     field: "total_fee_of_the_program",
-//     headerName: "Total Fee",
-//     width: 150,
-//   },
-//   { field: "living_expenses", headerName: "Living Expenses", width: 150 },
-//   {
-//     field: "food_and_necessities_expenses",
-//     headerName: "Food & Necessities",
-//     width: 200,
-//   },
-//   { field: "transport_amount", headerName: "Transport Amount", width: 150 },
-//   { field: "other_amount", headerName: "Other Amount", width: 150 },
-//   {
-//     field: "expected_sponsorship_amount",
-//     headerName: "Expected Sponsorship Amount",
-//     width: 150,
-//   },
-//   {
-//     field: "total_members_of_household",
-//     headerName: "Household Members",
-//     width: 150,
-//   },
-//   { field: "members_earning", headerName: "Earning Members", width: 150 },
-//   { field: "income_per_month", headerName: "Income Per Month", width: 150 },
-//   { field: "expense_per_month", headerName: "Expense Per Month", width: 150 },
-//   {
-//     field: "description_of_household",
-//     headerName: "Household Description",
-//     width: 300,
-//   },
-//   {
-//     field: "personal_statement",
-//     headerName: "Personal Statement",
-//     width: 400,
-//   },
-//   {
-//     field: "status",
-//     headerName: "Application Status",
-//     width: 150,
-//   },
-//   {
-//     field: "verification_required",
-//     headerName: "Verification Required",
-//     width: 150,
-//     valueGetter: (params) => (params.row.verification_required ? "Yes" : "No"),
-//   },
-//   {
-//     field: "degrees",
-//     headerName: "Degrees",
-//     width: 400,
-//     valueGetter: (params) =>
-//       params.row.degree
-//         ?.map(
-//           (degree) =>
-//             `${degree.degree_name} (${degree.grade || "N/A"} - ${
-//               degree.status || "N/A"
-//             })`
-//         )
-//         .join("; ") || "No degrees",
-//   },
-//   {
-//     field: "profile_picture",
-//     headerName: "Profile Picture",
-//     width: 300,
-//     renderCell: (params) => (
-//       <img
-//         src={params.row.profile_picture}
-//         alt="Profile"
-//         style={{ width: 50, height: 50, borderRadius: "50%" }}
-//       />
-//     ),
-//   },
-// ];
