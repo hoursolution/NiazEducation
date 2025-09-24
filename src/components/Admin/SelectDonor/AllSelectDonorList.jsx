@@ -198,6 +198,9 @@ const AllSelectDonorList = () => {
       setDonors(donorData);
       setSelectDonorList(updatedDonorList);
       setFilteredDonorList(updatedDonorList);
+      console.log(donorData);
+      console.log(updatedDonorList);
+      console.log(donorData);
       setError(null);
     } catch (err) {
       console.error("Error fetching data:", err);
@@ -221,7 +224,7 @@ const AllSelectDonorList = () => {
 
     if (selectedDonor) {
       filteredData = filteredData.filter(
-        (donor) => donor.donor?.id === selectedDonor
+        (item) => Number(item.donor) === Number(selectedDonor) // <— fixed here
       );
     }
 

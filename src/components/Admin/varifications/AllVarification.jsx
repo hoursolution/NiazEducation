@@ -208,7 +208,7 @@ const AllVarification = () => {
 
     if (nameFilter) {
       filtered = filtered.filter((app) =>
-        `${app.application.name} ${app.application.last_name}`
+        `${app.application_name} ${app.application_last_name}`
           .toLowerCase()
           .includes(nameFilter.toLowerCase())
       );
